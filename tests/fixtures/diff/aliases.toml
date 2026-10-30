@@ -1,0 +1,2 @@
+[aliases]
+tracker_create_issue = "tracker_open_issue"

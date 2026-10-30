@@ -1,0 +1,30 @@
+name: Profile request
+description: Ask for a profile that maps the spec onto a gateway product.
+title: "Profile: "
+labels: ["profile"]
+body:
+  - type: input
+    id: product
+    attributes:
+      label: Product
+      description: Name and a link to its docs or repo.
+    validations:
+      required: true
+  - type: textarea
+    id: shape
+    attributes:
+      label: How it exposes tools
+      description: Flat list, prefixes, path namespaces, meta-tools, or code mode. How views or audiences are set.
+    validations:
+      required: true
+  - type: textarea
+    id: dump
+    attributes:
+      label: How to get a tool dump
+      description: An endpoint, a CLI command, or an export. Do not paste private dumps.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Help
+      options:
+        - label: I can write the profile and run the checker on a sample dump.

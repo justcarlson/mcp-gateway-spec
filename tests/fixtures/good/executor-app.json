@@ -1,0 +1,71 @@
+{
+  "slug": "weather",
+  "name": "Weather",
+  "source": "authored",
+  "routers": [
+    {
+      "path": "",
+      "title": "Weather",
+      "description": "Forecasts and current conditions for any city. Use it for weather questions only."
+    }
+  ],
+  "tools": [
+    {
+      "name": "get_forecast",
+      "title": "Get forecast",
+      "description": "Get the hourly forecast for a city for the next 1-7 days, in metric units. Returns one entry per hour with temperature, rain chance, and wind speed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name, optionally with a country code, such as 'Oslo, NO'."
+          },
+          "days": {
+            "type": "integer",
+            "description": "Days ahead, 1-7. Defaults to 2.",
+            "minimum": 1,
+            "maximum": 7,
+            "default": 2
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "city"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true
+    },
+    {
+      "name": "get_current_conditions",
+      "title": "Get current conditions",
+      "description": "Get the current temperature, humidity, and wind for a city. Use get_forecast for anything later than the next hour.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name, optionally with a country code."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "city"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true
+    }
+  ]
+}

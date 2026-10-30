@@ -1,0 +1,4 @@
+# Placeholder hosts used in examples
+^https?://([a-z0-9-]+\.)*example\.(com|test|org)
+^https?://127\.0\.0\.1
+^https?://localhost

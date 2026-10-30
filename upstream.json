@@ -1,0 +1,49 @@
+{
+  "$schema": "./upstream.schema.json",
+  "mcp": {
+    "repo": "modelcontextprotocol/modelcontextprotocol",
+    "target": "2026-07-28",
+    "supported": [
+      "2026-07-28",
+      "2025-11-25"
+    ],
+    "draft": {
+      "ref": "main",
+      "url": "https://github.com/modelcontextprotocol/modelcontextprotocol/tree/main/docs/specification/draft"
+    },
+    "revisions": {
+      "2026-07-28": {
+        "status": "final",
+        "tag": "2026-07-28",
+        "commit": "5f5440bb26a62e2cf3440b92da5a667efa03b267",
+        "published_at": "2026-07-28T16:47:49Z",
+        "release_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2026-07-28",
+        "changelog_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/2026-07-28/docs/specification/2026-07-28/changelog.mdx",
+        "schema_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/2026-07-28/schema/2026-07-28/schema.ts",
+        "rc": {
+          "tag": "2026-07-28-RC",
+          "commit": "9d700ed62dcf86cb77475c9b81930611a9182f46",
+          "published_at": "2026-05-29T12:51:22Z",
+          "release_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2026-07-28-RC"
+        },
+        "verified_on": "2026-10-30"
+      },
+      "2025-11-25": {
+        "status": "final",
+        "tag": "2025-11-25",
+        "commit": "38c84e9f93ad191d9eb26d92b945d17bd0efcaf3",
+        "published_at": "2025-11-25T21:17:42Z",
+        "release_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2025-11-25",
+        "changelog_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/2025-11-25/docs/specification/2025-11-25/changelog.mdx",
+        "schema_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/blob/2025-11-25/schema/2025-11-25/schema.ts",
+        "rc": {
+          "tag": "2025-11-25-RC",
+          "commit": "b7d269cf527c2b26e8093e914ed9025be75f9e94",
+          "published_at": "2025-11-15T06:06:55Z",
+          "release_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2025-11-25-RC"
+        },
+        "verified_on": "2026-10-30"
+      }
+    }
+  }
+}

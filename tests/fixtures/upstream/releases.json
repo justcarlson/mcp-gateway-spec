@@ -1,0 +1,50 @@
+[
+  {
+    "tag_name": "2027-01-26-RC",
+    "name": "2027-01-26 RC",
+    "prerelease": true,
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2027-01-26-RC",
+    "published_at": "2026-11-20T12:00:00Z"
+  },
+  {
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2026-07-28",
+    "name": "2026-07-28",
+    "prerelease": false,
+    "published_at": "2026-07-28T16:47:49Z",
+    "tag_name": "2026-07-28"
+  },
+  {
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2026-07-28-RC",
+    "name": "2026-07-28 RC",
+    "prerelease": true,
+    "published_at": "2026-05-29T12:51:22Z",
+    "tag_name": "2026-07-28-RC"
+  },
+  {
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2025-11-25",
+    "name": "2025-11-25",
+    "prerelease": false,
+    "published_at": "2025-11-25T21:17:42Z",
+    "tag_name": "2025-11-25"
+  },
+  {
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2025-11-25-RC",
+    "name": "2025-11-25-RC",
+    "prerelease": true,
+    "published_at": "2025-11-15T06:06:55Z",
+    "tag_name": "2025-11-25-RC"
+  },
+  {
+    "tag_name": "2025-06-18",
+    "name": "2025-06-18",
+    "prerelease": false,
+    "draft": false,
+    "html_url": "https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2025-06-18",
+    "published_at": "2025-06-18T00:00:00Z"
+  }
+]

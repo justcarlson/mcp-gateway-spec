@@ -1,0 +1,105 @@
+{
+  "tools": [
+    {
+      "name": "get_time",
+      "title": "Get time",
+      "description": "Get the current time in UTC as an ISO 8601 string, with no inputs and no side effects.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_rooms",
+      "title": "List rooms",
+      "description": "List every meeting room in the building with its floor, seat count, and booking status for today.",
+      "inputSchema": {
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "send_message",
+      "title": "Send message",
+      "description": "Send a chat message to a channel. The gateway asks for approval. Returns the new message ID and its timestamp.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string",
+            "description": "Message text."
+          },
+          "api_key": {
+            "type": "string",
+            "description": "Your API key."
+          },
+          "thread": {
+            "$ref": "#/$defs/thread"
+          }
+        },
+        "$defs": {
+          "thread": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel",
+          "text"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "manage_branch",
+      "title": "Manage branch",
+      "description": "Get, list, create, or delete branches in a repository, depending on the action that the caller picks.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "get",
+              "list",
+              "create",
+              "delete"
+            ],
+            "description": "Operation."
+          },
+          "repoName": {
+            "type": "string",
+            "description": "Repository."
+          },
+          "branch_name": {
+            "type": "string",
+            "description": "Branch."
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

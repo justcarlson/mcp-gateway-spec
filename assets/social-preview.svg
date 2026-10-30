@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <rect x="0" y="0" width="1280" height="8" fill="#2dd4bf"/>
+  <g transform="translate(120 150) scale(2.2)">
+    <circle fill="#e6edf3" cx="8" cy="40" r="7"/>
+    <path stroke="#e6edf3" d="M15 40 H30" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <rect fill="#2dd4bf" x="30" y="10" width="12" height="60" rx="4"/>
+    <path stroke="#2dd4bf" d="M42 40 L66 14 M42 40 H66 M42 40 L66 66" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <circle fill="#e6edf3" cx="72" cy="14" r="7"/>
+    <circle fill="#e6edf3" cx="72" cy="40" r="7"/>
+    <circle fill="#e6edf3" cx="72" cy="66" r="7"/>
+  </g>
+  <text x="340" y="250" fill="#e6edf3" font-family="JetBrainsMono NF, Liberation Mono, monospace" font-size="72" font-weight="700">mcp-gateway<tspan fill="#2dd4bf">-spec</tspan></text>
+  <text x="342" y="310" fill="#9198a1" font-family="Noto Sans, Liberation Sans, sans-serif" font-size="32">Rules and a checker for MCP gateway tool surfaces</text>
+  <g font-family="JetBrainsMono NF, Liberation Mono, monospace" font-size="28" fill="#e6edf3">
+    <text x="120" y="440">view <tspan fill="#2dd4bf">→</tspan> group <tspan fill="#2dd4bf">→</tspan> tool</text>
+    <text x="120" y="490" fill="#9198a1">116 rules · 41 checked · 6 ADRs · 3 profiles</text>
+  </g>
+  <g font-family="Noto Sans, Liberation Sans, sans-serif" font-size="24" fill="#9198a1">
+    <text x="120" y="580">MCP 2026-07-28 · MIT</text>
+    <text x="1160" y="580" text-anchor="end">github.com/justcarlson/mcp-gateway-spec</text>
+  </g>
+</svg>

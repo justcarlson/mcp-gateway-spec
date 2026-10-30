@@ -1,0 +1,176 @@
+{
+  "tools": [
+    {
+      "name": "resolve-library-id",
+      "title": "Resolve library",
+      "description": "Resolve a package or product name to a documentation library ID that the docs tools accept.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "library_name": {
+            "type": "string",
+            "description": "Package name."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "library_name"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "cmd_album_addPhotos",
+      "title": "Add photos to album",
+      "description": "Add photos to an album in the photo library. Photos keep their place in other albums.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "album_id": {
+            "type": "string",
+            "description": "Album ID."
+          },
+          "photo_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Photo IDs."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "album_id"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "llm__GetDateTime",
+      "title": "Get date and time",
+      "description": "Get the current date and time of the home automation server, in its local time zone.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "Space Name",
+      "title": "Bad name",
+      "description": "A tool whose name has a space, which the MCP name format does not allow at all.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "search_issues",
+      "title": "Search issues",
+      "description": "Search issues by text. Returns up to 25 issues with key, title, and status for each match.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Words to match."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "Search_Issues",
+      "title": "Search issues (copy)",
+      "description": "Search issues by text, a second copy that differs only by case from another tool name.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Words to match."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_the_complete_list_of_every_archived_project_in_the_organization_with_members",
+      "title": "List archived projects",
+      "description": "List every archived project in the organization, with the members of each archived project.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "issue_details",
+      "title": "Issue details",
+      "description": "Get one issue by key with its description, status, labels, and the last ten comments.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_key": {
+            "type": "string",
+            "description": "Issue key."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "issue_key"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

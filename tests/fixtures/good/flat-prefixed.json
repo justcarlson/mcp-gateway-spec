@@ -1,0 +1,131 @@
+{
+  "tools": [
+    {
+      "name": "tracker_search_issues",
+      "title": "Search issues",
+      "description": "Search issues in the team tracker by text, status, or assignee. Use this when the user names a topic or person but not an issue key. Returns up to 25 issues with key, title, status, and assignee; narrow the query when results are truncated.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Words to match in titles and bodies."
+          },
+          "status": {
+            "type": "string",
+            "description": "Filter by status.",
+            "enum": [
+              "open",
+              "in_progress",
+              "done"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Results per page, 1-25. Defaults to 10.",
+            "minimum": 1,
+            "maximum": 25,
+            "default": 10
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "tracker_get_issue",
+      "title": "Get issue details",
+      "description": "Get one issue from the team tracker by key, with its description, status, labels, and the last 10 comments. Use tracker_search_issues first when you do not know the key.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_key": {
+            "type": "string",
+            "description": "Issue key such as ENG-142. Get it from tracker_search_issues."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "issue_key"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "tracker_create_issue",
+      "title": "Create issue",
+      "description": "Create an issue in the team tracker with a title, body, and optional labels. The gateway asks for approval before it runs. Returns the new issue key; do not retry on timeout, search first to avoid duplicates.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "One-line summary, at most 120 characters."
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdown description."
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Label names that already exist in the tracker."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "title"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "tracker_close_issue",
+      "title": "Close issue",
+      "description": "Close an open issue in the team tracker and add an optional closing comment. The gateway asks for approval. Closing an issue that is already closed returns the issue unchanged.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "issue_key": {
+            "type": "string",
+            "description": "Issue key such as ENG-142. Get it from tracker_search_issues."
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment that explains why the issue is closed."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "issue_key"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "slug": "home",
+  "name": "Home",
+  "source": "authored",
+  "routers": [
+    {
+      "path": "",
+      "title": "Home",
+      "description": "Smart home status and controls. Writes ask for approval."
+    }
+  ],
+  "tools": [
+    {
+      "name": "get_live_context",
+      "title": "Get live context",
+      "description": "Get the live state of every exposed device in the home, including lights, sensors, and locks.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "readOnly": true
+    },
+    {
+      "name": "delete_scene",
+      "title": "Delete scene",
+      "description": "Delete a saved scene by ID. The scene cannot be restored after it is deleted from the hub.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "description": "Scene ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "scene_id"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "readOnly": true
+    },
+    {
+      "name": "unlock_door",
+      "title": "Unlock door",
+      "description": "Unlock a door lock by entity ID and return the new lock state reported by the device.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entity_id": {
+            "type": "string",
+            "description": "Lock entity ID."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "entity_id"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "readOnly": true
+    },
+    {
+      "name": "list_devices",
+      "title": "List devices",
+      "description": "Read-only list of every device in the home with its name, room, and current state.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false
+      },
+      "readOnly": true
+    }
+  ]
+}

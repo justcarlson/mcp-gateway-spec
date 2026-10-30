@@ -1,0 +1,108 @@
+{
+  "cases": [
+    {
+      "input": "good/flat-prefixed.json",
+      "args": [
+        "--namespace",
+        "prefix"
+      ],
+      "exit": 0,
+      "rules": [],
+      "note": "Flat list with tracker_ prefixes; every checked rule passes."
+    },
+    {
+      "input": "good/groups",
+      "args": [],
+      "exit": 0,
+      "rules": [],
+      "note": "Spec-native group documents (path mode)."
+    },
+    {
+      "input": "good/executor-app.json",
+      "args": [],
+      "exit": 0,
+      "rules": [],
+      "note": "Executor-style app dump with effective approval policy."
+    },
+    {
+      "input": "bad/naming.json",
+      "args": [
+        "--namespace",
+        "none"
+      ],
+      "exit": 1,
+      "rules": [
+        "DESC-2",
+        "NAME-1",
+        "NAME-2",
+        "NAME-3",
+        "NAME-4",
+        "NAME-5"
+      ],
+      "note": "Kebab, camel, double-underscore, spaces, case duplicates, long names, noun-first."
+    },
+    {
+      "input": "bad/descriptions.json",
+      "args": [],
+      "exit": 1,
+      "rules": [
+        "DESC-1",
+        "DESC-2",
+        "DESC-3",
+        "DESC-4",
+        "DESC-7"
+      ],
+      "note": "Empty, overlong, hidden directive, private endpoint, terse, long first sentence."
+    },
+    {
+      "input": "bad/schema.json",
+      "args": [],
+      "exit": 1,
+      "rules": [
+        "GRP-6",
+        "NAME-4",
+        "SCHEMA-1",
+        "SCHEMA-2",
+        "SCHEMA-3",
+        "SCHEMA-5",
+        "SCHEMA-7"
+      ],
+      "note": "Missing schema, open no-arg schema, undocumented, $ref, credential param, mixed action enum."
+    },
+    {
+      "input": "bad/annotations.json",
+      "args": [],
+      "exit": 1,
+      "rules": [
+        "ANN-1",
+        "ANN-2",
+        "ANN-4",
+        "DESC-8"
+      ],
+      "note": "Contradicting hints, write tools that run without approval, false read-only claims."
+    },
+    {
+      "input": "bad/executor-meta-clash.json",
+      "args": [],
+      "exit": 1,
+      "rules": [
+        "DESC-9",
+        "GRP-2",
+        "NAME-7",
+        "NAME-8"
+      ],
+      "note": "Kebab slug, meta-tool name clash, slug repeated in names, empty group description."
+    },
+    {
+      "input": "bad/executor-catalog.json",
+      "args": [],
+      "exit": 1,
+      "rules": [
+        "NAME-3",
+        "NAME-4",
+        "NAME-5"
+      ],
+      "note": "Catalog app with generated camelCase paths that overflow the 64-character budget."
+    }
+  ]
+}
