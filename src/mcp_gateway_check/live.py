@@ -18,6 +18,8 @@ from .rules import STATELESS
 
 HANDSHAKE_PROTOCOL = "2025-11-25"
 CLIENT_INFO = {"name": "mcp-gateway-check", "version": __version__}
+# Some edges (Cloudflare Browser Integrity Check) refuse requests without a User-Agent.
+USER_AGENT = f"mcp-gateway-check/{__version__}"
 _META = "io.modelcontextprotocol/"
 
 
@@ -52,8 +54,10 @@ class _Client:
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream",
             "MCP-Protocol-Version": self.protocol,
-            **self.headers,
         }
+        # Header names are case-insensitive; a caller's header replaces a default.
+        given = {k.lower() for k in self.headers}
+        headers = {k: v for k, v in headers.items() if k.lower() not in given} | self.headers
         if self.stateless:
             headers["Mcp-Method"] = method
         if self.session:
@@ -131,6 +135,7 @@ def fetch_tools(
     header_envs: dict[str, str] | None = None,
     timeout: float = 30.0,
     protocol: str = STATELESS,
+    user_agent: str = USER_AGENT,
 ) -> dict[str, Any]:
     """Return {"tools": [...], "live": {...}} from a live endpoint.
 
@@ -138,7 +143,7 @@ def fetch_tools(
     server refuses, or for earlier revisions, it uses the initialize handshake.
     "live" records the protocol and mode used and the first page's cache fields.
     """
-    headers: dict[str, str] = {}
+    headers: dict[str, str] = {"User-Agent": user_agent}
     token = os.environ.get(token_env)
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -146,6 +151,8 @@ def fetch_tools(
         value = os.environ.get(env)
         if value is None:
             raise InputError(f"environment variable {env} for header {header} is not set")
+        # --header-env wins over the token and User-Agent defaults, in any case.
+        headers = {k: v for k, v in headers.items() if k.lower() != header.lower()}
         headers[header] = value
     client = _Client(url, headers, timeout, protocol)
     if client.stateless:

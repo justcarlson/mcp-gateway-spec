@@ -56,4 +56,6 @@ Approvals were declared in app code: `always()` for anything not marked read-onl
 
 ## Checker run on the dump
 
-`mcp-gateway-check` on 2,853 tools in 55 groups (path namespace, progressive discovery) found 54 errors, 9,521 warnings, and 1,694 info findings before waivers. Most warnings came from upstream servers the owner does not control (missing hints, missing titles, short descriptions), which is why [waivers](../SPEC.md#conf-2) carry an owner and an expiry.
+`mcp-gateway-check` on 2,853 tools in 55 groups (path namespace, progressive discovery) found 54 errors, 9,521 warnings, and 1,694 info findings before waivers with v0.1.0. Most warnings came from upstream servers the owner does not control (missing hints, missing titles, short descriptions), which is why [waivers](../SPEC.md#conf-2) carry an owner and an expiry.
+
+v0.1.1 found 635 errors, 9,520 warnings, and 1,694 info findings on the same dump. The new errors are [ANN-4](../SPEC.md#ann-4): v0.1.0 read the admin `readOnly` field as the approval state, but it is the tool's kind. With `approval` taken from app source, 581 mutations in 12 apps run without approval because the app uses `never()`. These findings are correct: each needs approval or an [ANN-7](../SPEC.md#ann-7) exception record. The checker also listed 703 tools with no approval data and 55 groups with no instruction text as "not checked".

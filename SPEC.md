@@ -1,6 +1,6 @@
 # MCP Gateway Specification
 
-**Version:** 0.1.0 · **Status:** Draft for use · **Date:** 2026-10-30 · **MCP revisions:** [2026-07-28][S1] (target), [2025-11-25][S62]
+**Version:** 0.1.1 · **Status:** Draft for use · **Date:** 2026-10-30 · **MCP revisions:** [2026-07-28][S1] (target), [2025-11-25][S62]
 
 This specification sets rules for an MCP gateway's tool surface and operations: naming, grouping, descriptions, schemas, approvals, discovery, views, edge exposure, change management, deployment, observability, and security. Read it before you change a gateway's tools, groups, descriptions, approvals, edge exposure, or deployment, and before you set up a gateway for a new client.
 

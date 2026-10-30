@@ -13,6 +13,10 @@ from typing import Any
 from .checks import Finding, finding
 from .model import Inventory, Tool
 
+# The rules each diff mode evaluates. Waivers for other rules are not reported as unused.
+CHANGE_RULES = frozenset({"CHG-1", "CHG-2", "CHG-3", "CHG-4", "CHG-9"})
+SYNC_RULES = frozenset({"EDGE-3"})
+
 
 def _types(schema: dict[str, Any]) -> set[str]:
     t = schema.get("type")

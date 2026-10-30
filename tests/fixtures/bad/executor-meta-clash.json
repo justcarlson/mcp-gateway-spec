@@ -33,7 +33,8 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "readOnly": true
+      "readOnly": true,
+      "approval": "none"
     },
     {
       "name": "execute",
@@ -58,7 +59,8 @@
         "idempotentHint": false,
         "openWorldHint": true
       },
-      "readOnly": false
+      "readOnly": false,
+      "approval": "required"
     },
     {
       "name": "webcrawl_scrape_page",
@@ -83,7 +85,8 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "readOnly": true
+      "readOnly": true,
+      "approval": "none"
     }
   ]
 }

@@ -34,8 +34,8 @@ Apply [SPEC.md](SPEC.md) to any change to an MCP gateway's surface or operations
 Python 3.12+, no dependencies.
 
 ```sh
-uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.0 mcp-gateway-check --help
-# or: pipx install git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.0
+uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1 mcp-gateway-check --help
+# or: pipx install git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1
 ```
 
 ```sh
@@ -53,6 +53,8 @@ mcp-gateway-check rules                               # every rule ID, level, te
 - `--format json` for machine output; `--waivers waivers.toml` for accepted findings (rule, target, reason, owner, expiry within 180 days).
 - Exit 0: no errors. Exit 1: errors (or warnings with `--fail-on warning`). Exit 2: input error.
 - The bearer token comes from `$MCP_TOKEN` (or `--token-env NAME`). Never put a token on the command line. Other headers: `--header-env Header=ENVVAR`.
+- `--user-agent VALUE` overrides the default `mcp-gateway-check/<version>` User-Agent; `--header-env User-Agent=ENVVAR` wins over both.
+- "not checked" in a report lists rules that had no data to check (for example no `approval` field or no instruction text). They did not pass.
 
 ## Hard rules to keep in mind
 

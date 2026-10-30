@@ -289,10 +289,13 @@ def finding(
     group: str | None = None,
     heuristic: bool = False,
     source: str | None = None,
+    severity: str | None = None,
 ) -> Finding:
     """Make a finding. Severity follows the rule level; heuristics drop one step."""
     rule = RULES[rule_id]
-    if rule.mandatory:
+    if severity is not None:
+        pass
+    elif rule.mandatory:
         severity = "warning" if heuristic else "error"
     elif rule.level.startswith("SHOULD"):
         severity = "info" if heuristic else "warning"
@@ -381,6 +384,12 @@ def check_tool(inv: Inventory, tool: Tool) -> Iterator[Finding]:
     yield from _annotations(tool)
 
 
+def _passthrough(inv: Inventory, tool: Tool) -> bool:
+    """The tool's group holds only meta-tools: an edge serving a gateway's surface (NAME-8 exempt)."""
+    group = inv.groups.get(tool.group) if tool.group else None
+    return group is not None and all(t.leaf.lower() in inv.meta_tools for t in group.tools)
+
+
 def _naming(inv: Inventory, tool: Tool) -> Iterator[Finding]:
     raw_name = tool.raw.get("name", "")
     if not MCP_NAME.match(raw_name):
@@ -404,7 +413,9 @@ def _naming(inv: Inventory, tool: Tool) -> Iterator[Finding]:
                 break
     if leaf_words and leaf_words[0] not in VERBS and len(leaf_words) > 1:
         yield finding("NAME-4", f"{tool.leaf!r} does not start with a known verb", tool=tool, heuristic=True)
-    if tool.leaf in inv.meta_tools or (tool.group and tool.leaf.lower() in inv.meta_tools):
+    if (tool.leaf in inv.meta_tools or (tool.group and tool.leaf.lower() in inv.meta_tools)) and not _passthrough(
+        inv, tool
+    ):
         yield finding("NAME-8", f"{tool.leaf!r} reuses a meta-tool name ({', '.join(inv.meta_tools)})", tool=tool)
     if len(tool.exposed) > MAX_EXPOSED:
         yield finding(
@@ -528,6 +539,18 @@ def _annotations(tool: Tool) -> Iterator[Finding]:
     read_only = ann.get("readOnlyHint") is True
     leaf_words = words(tool.leaf)
     verb = leaf_words[0] if leaf_words else ""
+    if tool.reviewed_read_only:
+        # The gateway reviewed it as a read (ANN-3); its review, not the upstream hints, sets the
+        # policy. Upstream hint conflicts are left to the server owner, as info.
+        if read_only and ann.get("destructiveHint") is True:
+            yield finding(
+                "ANN-2",
+                "upstream sets readOnlyHint and destructiveHint; the gateway reviewed it as a read",
+                tool=tool,
+                heuristic=True,
+                severity="info",
+            )
+        return
     if read_only and ann.get("destructiveHint") is True:
         yield finding("ANN-2", "readOnlyHint and destructiveHint are both true", tool=tool)
     elif read_only and (verb in WRITE_VERBS - READ_VERBS or DESTRUCTIVE & set(leaf_words)):
@@ -535,7 +558,9 @@ def _annotations(tool: Tool) -> Iterator[Finding]:
             "ANN-2", f"readOnlyHint is true but the name suggests a write ({verb!r})", tool=tool, heuristic=True
         )
     if tool.approval == "none":
-        if ann.get("destructiveHint") is True or ann.get("readOnlyHint") is False:
+        if tool.kind == "mutation":
+            yield finding("ANN-4", "runs without approval but the gateway classes it as a mutation", tool=tool)
+        elif ann.get("destructiveHint") is True or ann.get("readOnlyHint") is False:
             yield finding("ANN-4", "runs without approval but its hints declare writes", tool=tool)
         elif not read_only and (verb in WRITE_VERBS - READ_VERBS or DESTRUCTIVE & set(leaf_words)):
             yield finding(
@@ -634,6 +659,20 @@ def check_live(inv: Inventory) -> Iterator[Finding]:
         missing = [k for k in ("ttlMs", "cacheScope") if cache.get(k) is None]
         if missing:
             yield finding("CHG-11", f"{entry['url']}: tools/list result has no {' or '.join(missing)}")
+
+
+def not_checked(inv: Inventory) -> list[dict[str, Any]]:
+    """Checked rules the input has no data for. They neither pass nor fail."""
+    out = []
+    tools = [t for t in inv.tools if t.approval is None and not inv.is_meta(t)]
+    if tools:
+        out.append({"rules": ["ANN-4"], "count": len(tools), "of": "tools", "reason": "no approval field"})
+    groups = [g for g in inv.groups.values() if not (g.instructions or "").strip()]
+    if groups:
+        out.append(
+            {"rules": ["DESC-11", "DESC-12"], "count": len(groups), "of": "groups", "reason": "no instruction text"}
+        )
+    return out
 
 
 def run_checks(inv: Inventory) -> list[Finding]:

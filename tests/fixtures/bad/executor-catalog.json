@@ -38,7 +38,8 @@
         "idempotentHint": false,
         "openWorldHint": false
       },
-      "readOnly": false
+      "readOnly": false,
+      "approval": "required"
     }
   ]
 }

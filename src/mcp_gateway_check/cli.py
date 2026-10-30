@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
-from .checks import Finding, run_checks
-from .diff import diff_change, diff_sync
-from .live import fetch_tools
+from .checks import Finding, not_checked, run_checks
+from .diff import CHANGE_RULES, SYNC_RULES, diff_change, diff_sync
+from .live import USER_AGENT, fetch_tools
 from .model import DEFAULT_META_TOOLS, DEFAULT_SEPARATOR, InputError, Inventory, build_inventory, load_path
 from .report import to_json, to_text
 from .revisions import TARGET, load
@@ -66,6 +66,11 @@ def _add_input_args(p: argparse.ArgumentParser) -> None:
         default=[],
         metavar="HEADER=ENVVAR",
         help="send HEADER with the value of ENVVAR (repeatable)",
+    )
+    p.add_argument(
+        "--user-agent",
+        default=USER_AGENT,
+        help=f"User-Agent for URLs (default: {USER_AGENT}); --header-env User-Agent=ENV wins",
     )
 
 
@@ -131,7 +136,8 @@ def _load(source: str, args: argparse.Namespace) -> list[tuple[str, Any]]:
             if not sep:
                 raise InputError(f"--header-env {item!r}: use HEADER=ENVVAR")
             headers[header] = env
-        doc = fetch_tools(source, args.token_env, headers, protocol=load().protocol(args.mcp_revision))
+        protocol = load().protocol(args.mcp_revision)
+        doc = fetch_tools(source, args.token_env, headers, protocol=protocol, user_agent=args.user_agent)
         doc["live"]["url"] = source
         return [(_url_label(source), doc)]
     return load_path(Path(source))
@@ -152,7 +158,9 @@ def _inventory(sources: list[str], args: argparse.Namespace) -> Inventory:
     return inv
 
 
-def _finish(inv: Inventory | None, findings: list[Finding], args: argparse.Namespace) -> int:
+def _finish(
+    inv: Inventory | None, findings: list[Finding], args: argparse.Namespace, evaluated: frozenset[str] | None = None
+) -> int:
     today = args.today or dt.date.today()
     revision = args.mcp_revision
     # Rules outside the revision's window are skipped. A waiver for a skipped
@@ -160,12 +168,18 @@ def _finish(inv: Inventory | None, findings: list[Finding], args: argparse.Names
     skipped = [r.id for r in RULES.values() if not r.applies_to(revision)]
     findings = [f for f in findings if f.rule not in skipped]
     if args.waivers:
-        findings = apply_waivers(findings, load_waivers(args.waivers, today), today, frozenset(skipped))
+        not_run = set(skipped) | ({r for r in RULES if r not in evaluated} if evaluated is not None else set())
+        findings = apply_waivers(findings, load_waivers(args.waivers, today), today, frozenset(not_run))
+    gaps = []
+    for gap in not_checked(inv) if inv is not None else []:
+        rules = [r for r in gap["rules"] if r not in skipped]
+        if rules:
+            gaps.append({**gap, "rules": rules})
     if args.format == "json":
-        print(to_json(inv, findings, revision, skipped))
+        print(to_json(inv, findings, revision, skipped, gaps))
     else:
         color = sys.stdout.isatty() and "NO_COLOR" not in os.environ
-        print(to_text(inv, findings, revision, skipped, limit=0 if args.all else 5, color=color))
+        print(to_text(inv, findings, revision, skipped, gaps, limit=0 if args.all else 5, color=color))
     failing = {"error"} if args.fail_on == "error" else {"error", "warning"}
     return EXIT_FINDINGS if any(f.severity in failing and not f.waived for f in findings) else EXIT_OK
 
@@ -206,7 +220,8 @@ def main(argv: list[str] | None = None) -> int:
             return EXIT_OK
         if args.command == "check":
             inv = _inventory(args.inputs, args)
-            return _finish(inv, run_checks(inv), args)
+            # Diff-only rules are not evaluated here, so a shared waiver file stays clean.
+            return _finish(inv, run_checks(inv), args, frozenset(RULES) - CHANGE_RULES - SYNC_RULES)
         if args.command == "diff":
             old = _inventory([args.old], args)
             new = _inventory([args.new], args)
@@ -214,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
                 findings = diff_sync(old, new, args.strip_prefix)
             else:
                 findings = diff_change(old, new, _aliases(args.aliases))
-            return _finish(None, findings, args)
+            return _finish(None, findings, args, SYNC_RULES if args.mode == "sync" else CHANGE_RULES)
         parser.print_help()
         return EXIT_INPUT
     except InputError as exc:

@@ -24,7 +24,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "readOnly": true
+      "approval": "none"
     },
     {
       "name": "delete_scene",
@@ -49,7 +49,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "readOnly": true
+      "approval": "none"
     },
     {
       "name": "unlock_door",
@@ -74,7 +74,7 @@
         "idempotentHint": false,
         "openWorldHint": false
       },
-      "readOnly": true
+      "approval": "none"
     },
     {
       "name": "list_devices",
@@ -87,7 +87,7 @@
       "annotations": {
         "readOnlyHint": false
       },
-      "readOnly": true
+      "approval": "none"
     }
   ]
 }

@@ -414,6 +414,23 @@ class Live(unittest.TestCase):
         self.assertEqual(doc["inventory"]["live"][0]["mode"], "session", doc)
         self.assertIn("initialize", [c[0] for c in calls])
 
+    def test_default_user_agent(self):
+        url, _ = self.start(stateless=True, sse=False)
+        self.token()
+        run_json("check", url, "--token-env", "TEST_MCP_TOKEN")
+        self.assertRegex(self.requests[0][0].get("User-Agent"), r"^mcp-gateway-check/\d+\.\d+\.\d+$")
+
+    def test_user_agent_flag_and_header_env_precedence(self):
+        url, _ = self.start(stateless=True, sse=False)
+        self.token()
+        run_json("check", url, "--token-env", "TEST_MCP_TOKEN", "--user-agent", "probe/1")
+        self.assertEqual(self.requests[-1][0].get_all("User-Agent"), ["probe/1"])
+        os.environ["TEST_UA"] = "edge-check/2"
+        self.addCleanup(os.environ.pop, "TEST_UA")
+        args = ("--token-env", "TEST_MCP_TOKEN", "--user-agent", "probe/1", "--header-env", "user-agent=TEST_UA")
+        run_json("check", url, *args)
+        self.assertEqual(self.requests[-1][0].get_all("User-Agent"), ["edge-check/2"])
+
     def token(self):
         os.environ["TEST_MCP_TOKEN"] = "s3cret"
         self.addCleanup(os.environ.pop, "TEST_MCP_TOKEN")

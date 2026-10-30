@@ -1,6 +1,6 @@
 [project]
 name = "mcp-gateway-check"
-version = "0.1.0"
+version = "0.1.1"
 description = "Conformance checker for mcp-gateway-spec: lint MCP gateway tool surfaces."
 readme = "README.md"
 license = "MIT"

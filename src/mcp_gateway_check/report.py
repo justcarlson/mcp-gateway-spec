@@ -39,11 +39,18 @@ def level_status(findings: list[Finding]) -> dict[str, bool]:
     return {"level1": not must, "level2": not must and not should}
 
 
-def to_json(inv: Inventory | None, findings: list[Finding], revision: str, skipped: list[str]) -> str:
+def to_json(
+    inv: Inventory | None,
+    findings: list[Finding],
+    revision: str,
+    skipped: list[str],
+    not_checked: list[dict[str, Any]] | None = None,
+) -> str:
     doc: dict[str, Any] = {
         "checker": {"name": "mcp-gateway-check", "version": __version__, "spec_version": SPEC_VERSION},
         "mcp_revision": revision,
         "skipped_rules": skipped,
+        "not_checked": not_checked or [],
         "summary": summary(findings),
         "conformance": level_status(findings),
         "findings": [f.as_dict() for f in sort_findings(findings)],
@@ -69,6 +76,7 @@ def to_text(
     findings: list[Finding],
     revision: str,
     skipped: list[str],
+    not_checked: list[dict[str, Any]] | None = None,
     limit: int = 5,
     color: bool = False,
 ) -> str:
@@ -90,6 +98,10 @@ def to_text(
     if skipped:
         noun = "rule" if len(skipped) == 1 else "rules"
         lines.append(f"skipped {len(skipped)} {noun} outside MCP {revision}: {', '.join(skipped)}")
+    for gap in not_checked or []:
+        lines.append(
+            f"not checked: {', '.join(gap['rules'])} for {gap['count']} {gap['of']} ({gap['reason']}); not a pass"
+        )
     lines.append("")
 
     by_rule: dict[str, list[Finding]] = defaultdict(list)
@@ -122,6 +134,8 @@ def to_text(
         + ("pass" if status["level1"] else "FAIL")
         + ", Level 2 "
         + ("pass" if status["level2"] else "FAIL")
-        + " (manual rules need the review checklist)"
+        + " (manual rules need the review checklist"
+        + ("; some checked rules had no data, see 'not checked'" if not_checked else "")
+        + ")"
     )
     return "\n".join(lines)
