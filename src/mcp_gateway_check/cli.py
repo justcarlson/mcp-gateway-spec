@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import os
+import re
 import sys
 import tomllib
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -113,6 +115,14 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _url_label(url: str) -> str:
+    """A group-slug-shaped label for a URL, used as its group in file mode."""
+    parts = urllib.parse.urlsplit(url)
+    label = re.sub(r"[^a-z0-9]", "", (parts.hostname or "").split(".")[0])
+    label = label.lstrip("0123456789")[:20]
+    return label if len(label) >= 2 else "live"
+
+
 def _load(source: str, args: argparse.Namespace) -> list[tuple[str, Any]]:
     if source.startswith(("http://", "https://")):
         headers = {}
@@ -123,14 +133,19 @@ def _load(source: str, args: argparse.Namespace) -> list[tuple[str, Any]]:
             headers[header] = env
         doc = fetch_tools(source, args.token_env, headers, protocol=load().protocol(args.mcp_revision))
         doc["live"]["url"] = source
-        return [(source, doc)]
+        return [(_url_label(source), doc)]
     return load_path(Path(source))
 
 
 def _inventory(sources: list[str], args: argparse.Namespace) -> Inventory:
     docs: list[tuple[str, Any]] = []
     for source in sources:
-        docs.extend(_load(source, args))
+        for label, doc in _load(source, args):
+            base, n = label, 1
+            while any(label == seen for seen, _ in docs):
+                n += 1
+                label = f"{base}{n}"
+            docs.append((label, doc))
     meta = tuple(m.strip() for m in args.meta_tools.split(",") if m.strip())
     inv = build_inventory(docs, args.namespace, args.separator, meta, args.discovery)
     inv.live = [doc["live"] for _, doc in docs if isinstance(doc, dict) and isinstance(doc.get("live"), dict)]
@@ -140,12 +155,12 @@ def _inventory(sources: list[str], args: argparse.Namespace) -> Inventory:
 def _finish(inv: Inventory | None, findings: list[Finding], args: argparse.Namespace) -> int:
     today = args.today or dt.date.today()
     revision = args.mcp_revision
-    # Rules outside the revision's window are skipped, before waivers, so a waiver
-    # for a skipped rule is not reported as unused.
+    # Rules outside the revision's window are skipped. A waiver for a skipped
+    # rule is not reported as unused.
     skipped = [r.id for r in RULES.values() if not r.applies_to(revision)]
     findings = [f for f in findings if f.rule not in skipped]
     if args.waivers:
-        findings = apply_waivers(findings, load_waivers(args.waivers, today), today)
+        findings = apply_waivers(findings, load_waivers(args.waivers, today), today, frozenset(skipped))
     if args.format == "json":
         print(to_json(inv, findings, revision, skipped))
     else:

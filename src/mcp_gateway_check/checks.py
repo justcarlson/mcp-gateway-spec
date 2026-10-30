@@ -338,15 +338,25 @@ def _properties(schema: Any) -> dict[str, Any]:
     return {}
 
 
+SCHEMA_MAPS = {"properties", "patternProperties", "$defs", "definitions", "dependentSchemas"}
+SCHEMA_DATA = {"enum", "const", "default", "examples"}
+
+
 def _walk_schema(schema: Any) -> Iterator[tuple[str, Any]]:
-    """Yield (key, value) pairs for every nested node of a JSON schema."""
+    """Yield (keyword, value) pairs for every nested schema node.
+
+    Property names and literal values (enum, default) are data, not keywords.
+    """
     stack = [schema]
     while stack:
         node = stack.pop()
         if isinstance(node, dict):
             for key, value in node.items():
                 yield key, value
-                stack.append(value)
+                if key in SCHEMA_MAPS and isinstance(value, dict):
+                    stack.extend(value.values())
+                elif key not in SCHEMA_DATA:
+                    stack.append(value)
         elif isinstance(node, list):
             stack.extend(node)
 

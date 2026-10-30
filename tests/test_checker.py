@@ -296,7 +296,7 @@ class Cli(unittest.TestCase):
 class Live(unittest.TestCase):
     """A tiny streamable-HTTP server: stateless first, then the initialize fallback."""
 
-    def start(self, stateless: bool, sse: bool, cache: bool = True):
+    def start(self, stateless: bool, sse: bool, cache: bool = True, junk: bool = False):
         calls = []
         pages = [{"tools": [tool("get_a")], "nextCursor": "p2"}, {"tools": [tool("get_b")]}]
         if cache:
@@ -325,8 +325,12 @@ class Live(unittest.TestCase):
                     self.end_headers()
                     return
                 if method == "tools/list" and not stateless and self.headers.get("Mcp-Session-Id") != "sess-1":
-                    self.send_response(400)
+                    # junk: answer 200 with a body that is not JSON-RPC
+                    self.send_response(200 if junk else 400)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Content-Length", "5")
                     self.end_headers()
+                    self.wfile.write(b"hello")
                     return
                 if method == "initialize":
                     result = {
@@ -395,6 +399,20 @@ class Live(unittest.TestCase):
         methods = [c[0] for c in calls]
         self.assertEqual(methods, ["initialize", "notifications/initialized", "tools/list", "tools/list"])
         self.assertEqual(doc["inventory"]["live"][0]["mode"], "session")
+
+    def test_two_urls_get_slug_shaped_groups(self):
+        url, _ = self.start(stateless=True, sse=False)
+        self.token()
+        code, doc = run_json("check", url, url, "--token-env", "TEST_MCP_TOKEN")
+        self.assertNotIn("GRP-2", rules_of(doc), doc)
+        self.assertNotIn("NAME-5", rules_of(doc), doc)
+
+    def test_junk_stateless_answer_falls_back_to_handshake(self):
+        url, calls = self.start(stateless=False, sse=False, junk=True)
+        self.token()
+        code, doc = run_json("check", url, "--token-env", "TEST_MCP_TOKEN")
+        self.assertEqual(doc["inventory"]["live"][0]["mode"], "session", doc)
+        self.assertIn("initialize", [c[0] for c in calls])
 
     def token(self):
         os.environ["TEST_MCP_TOKEN"] = "s3cret"

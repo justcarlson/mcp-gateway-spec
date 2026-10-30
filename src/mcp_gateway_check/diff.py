@@ -31,6 +31,8 @@ def schema_breaks(old: Any, new: Any, path: str = "") -> Iterator[str]:
     old_t, new_t = _types(old), _types(new)
     if old_t and new_t and not old_t <= new_t and not (old_t == {"integer"} and "number" in new_t):
         yield f"{where}: type {sorted(old_t)} became {sorted(new_t)}"
+    elif new_t and not old_t and not {"enum", "const", "$ref", "anyOf", "oneOf", "allOf"} & old.keys():
+        yield f"{where}: new type restriction {sorted(new_t)}"
     if isinstance(old.get("enum"), list) and isinstance(new.get("enum"), list):
         lost = [v for v in old["enum"] if v not in new["enum"]]
         if lost:
@@ -77,10 +79,10 @@ def output_breaks(old: Any, new: Any, path: str = "") -> Iterator[str]:
         yield f"{where}.{key}: no longer guaranteed"
 
 
-def _index(inv: Inventory, strip_prefix: str = "") -> dict[str, Tool]:
+def _index(inv: Inventory, strip_prefix: str = "", by_exposed: bool = False) -> dict[str, Tool]:
     out = {}
     for t in inv.tools:
-        key = t.ref if inv.namespace == "path" else t.exposed
+        key = t.ref if inv.namespace == "path" and not by_exposed else t.exposed
         if strip_prefix and key.startswith(strip_prefix):
             key = key[len(strip_prefix) :]
         out[key] = t
@@ -92,7 +94,9 @@ def _deprecated(tool: Tool) -> bool:
 
 
 def diff_change(old: Inventory, new: Inventory, aliases: dict[str, str]) -> list[Finding]:
-    before, after = _index(old), _index(new)
+    # Snapshots read in different namespace modes share only the exposed name.
+    by_exposed = old.namespace != new.namespace
+    before, after = _index(old, by_exposed=by_exposed), _index(new, by_exposed=by_exposed)
     out: list[Finding] = []
     for name, tool in before.items():
         if name not in after:

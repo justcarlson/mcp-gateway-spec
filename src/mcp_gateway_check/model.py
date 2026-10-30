@@ -86,7 +86,8 @@ class Inventory:
             group.tools.append(tool)
 
     def is_meta(self, tool: Tool) -> bool:
-        return tool.group is None and tool.name in self.meta_tools
+        # In a flat view, a tool named search or execute is an ordinary tool.
+        return self.discovery != "flat" and tool.group is None and tool.name in self.meta_tools
 
 
 def extract_tools(doc: Any) -> list[dict[str, Any]] | None:
@@ -190,7 +191,7 @@ def build_inventory(
             if meta is None:
                 raise InputError(f"{label}: path mode needs group documents (slug + tools)")
             group_slug = meta.slug
-            inv.groups[group_slug] = meta
+            inv.groups.setdefault(group_slug, meta)  # later documents with the same slug add tools
         elif namespace == "file":
             group_slug = label
             inv.groups.setdefault(label, Group(slug=label))
@@ -228,10 +229,15 @@ def load_path(path: Path) -> list[tuple[str, Any]]:
         files = [path]
     else:
         raise InputError(f"{path}: not found")
+    stems = [f.stem for f in files]
     docs = []
     for f in files:
+        label = f.stem
+        if stems.count(label) > 1:
+            # a/tools.json and b/tools.json are different groups.
+            label = "-".join(f.relative_to(path).with_suffix("").parts)
         try:
-            docs.append((f.stem, json.loads(f.read_text(encoding="utf-8"))))
+            docs.append((label, json.loads(f.read_text(encoding="utf-8"))))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise InputError(f"{f}: {exc}") from exc
     return docs

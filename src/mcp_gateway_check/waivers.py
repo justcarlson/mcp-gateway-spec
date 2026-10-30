@@ -47,9 +47,13 @@ def load_waivers(path: Path, today: dt.date) -> list[Waiver]:
     out = []
     for i, w in enumerate(entries, 1):
         where = f"{path} waiver #{i}"
+        if not isinstance(w, dict):
+            raise InputError(f"{where}: use [[waiver]] tables")
         for key in ("rule", "target", "reason", "owner", "expires"):
             if key not in w or (isinstance(w[key], str) and not w[key].strip()):
                 raise InputError(f"{where}: missing {key!r} (CONF-2)")
+            if key != "expires" and not isinstance(w[key], str):
+                raise InputError(f"{where}: {key} must be a string")
         expires = w["expires"]
         if isinstance(expires, dt.datetime):
             expires = expires.date()
@@ -63,8 +67,13 @@ def load_waivers(path: Path, today: dt.date) -> list[Waiver]:
     return out
 
 
-def apply_waivers(findings: list[Finding], waivers: list[Waiver], today: dt.date) -> list[Finding]:
-    """Mark waived findings and add CONF-3 findings for expired or unused waivers."""
+def apply_waivers(
+    findings: list[Finding], waivers: list[Waiver], today: dt.date, skipped: frozenset[str] = frozenset()
+) -> list[Finding]:
+    """Mark waived findings and add CONF-3 findings for expired or unused waivers.
+
+    A waiver whose rules are all in `skipped` (outside the MCP revision) is not unused.
+    """
     active = [w for w in waivers if w.expires >= today]
     for f in findings:
         for w in active:
@@ -83,6 +92,6 @@ def apply_waivers(findings: list[Finding], waivers: list[Waiver], today: dt.date
                     group=w.target,
                 )
             )
-        elif w.used == 0:
+        elif w.used == 0 and not all(r in skipped for r in RULES if fnmatchcase(r, w.rule)):
             extra.append(finding("CONF-3", f"waiver for {w.rule} on {w.target!r} matched nothing", group=w.target))
     return findings + extra

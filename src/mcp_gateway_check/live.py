@@ -154,6 +154,8 @@ def fetch_tools(
         except _RpcError as first:
             if first.http in (401, 403):
                 raise InputError(f"{url}: {first} (set ${token_env} to a bearer token)") from first
+        except InputError:
+            pass  # not a stateless server; try the handshake
         client = _Client(url, headers, timeout, min(protocol, HANDSHAKE_PROTOCOL))
     try:
         init = client.post(
