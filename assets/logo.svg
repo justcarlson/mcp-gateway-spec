@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="96" viewBox="0 0 520 96" role="img" aria-labelledby="t">
+  <title id="t">mcp-gateway-spec</title>
+  <style>
+    .ink { fill: #1f2328; }
+    .line { stroke: #1f2328; }
+    .accent { fill: #0f766e; }
+    .accent-line { stroke: #0f766e; }
+    .muted { fill: #59636e; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #e6edf3; }
+      .line { stroke: #e6edf3; }
+      .accent { fill: #2dd4bf; }
+      .accent-line { stroke: #2dd4bf; }
+      .muted { fill: #9198a1; }
+    }
+  </style>
+  <g transform="translate(8 8)">
+    <circle class="ink" cx="8" cy="40" r="7"/>
+    <path class="line" d="M15 40 H30" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <rect class="accent" x="30" y="10" width="12" height="60" rx="4"/>
+    <path class="accent-line" d="M42 40 L66 14 M42 40 H66 M42 40 L66 66" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <circle class="ink" cx="72" cy="14" r="7"/>
+    <circle class="ink" cx="72" cy="40" r="7"/>
+    <circle class="ink" cx="72" cy="66" r="7"/>
+  </g>
+  <text x="104" y="56" class="ink" font-family="ui-monospace, SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="38" font-weight="700">mcp-gateway<tspan class="accent">-spec</tspan></text>
+  <text x="106" y="82" class="muted" font-family="ui-sans-serif, -apple-system, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="15">rules and a checker for MCP gateway tool surfaces</text>
+</svg>

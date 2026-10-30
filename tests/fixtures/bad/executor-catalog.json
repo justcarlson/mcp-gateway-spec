@@ -1,0 +1,44 @@
+{
+  "slug": "contacts",
+  "name": "Contacts",
+  "source": "catalog",
+  "routers": [
+    {
+      "path": "",
+      "title": "Contacts",
+      "description": "Address book contacts and contact groups."
+    },
+    {
+      "path": "api",
+      "title": "API",
+      "description": "Generated API."
+    }
+  ],
+  "tools": [
+    {
+      "name": "api.otherContacts.peopleOtherContactsCopyOtherContactToMyContactsGroup",
+      "title": "Copy other contact",
+      "description": "Copies an other contact to a new contact in the user's contacts group and returns the created contact.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "resourceName": {
+            "type": "string",
+            "description": "Resource name."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "resourceName"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      },
+      "readOnly": false
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "group": {
+    "slug": "notes",
+    "title": "Notes",
+    "description": "Personal notes in the team wiki. Use it to find or read meeting notes and how-to pages, not for issues (use tracker)."
+  },
+  "tools": [
+    {
+      "name": "search_notes",
+      "title": "Search notes",
+      "description": "Search wiki notes by title and body text. Returns up to 20 matches with note ID, title, and the first 200 characters. Use get_note to read a full note.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Words to match."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_note",
+      "title": "Get note",
+      "description": "Get the full Markdown body of one wiki note by ID. IDs come from search_notes. Notes longer than 20,000 characters are truncated with a marker.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "note_id": {
+            "type": "string",
+            "description": "Note ID from search_notes."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "note_id"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}

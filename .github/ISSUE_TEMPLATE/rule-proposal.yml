@@ -1,0 +1,60 @@
+name: Rule proposal
+description: Propose a new rule or a change to an existing one. Evidence and a citation are required.
+title: "Rule: "
+labels: ["rule"]
+body:
+  - type: markdown
+    attributes:
+      value: Read [CONTRIBUTING.md](https://github.com/justcarlson/mcp-gateway-spec/blob/main/CONTRIBUTING.md#propose-a-rule) first. Anonymize hostnames, accounts, and private names.
+  - type: input
+    id: rule
+    attributes:
+      label: Rule ID
+      description: An existing ID to change, or the family for a new rule (for example NAME).
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What goes wrong without the rule? Give a real example.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and citations
+      description: Links to the MCP spec or a SEP, client docs, a published measurement, or a public gateway's code. Give the date you checked each link.
+      placeholder: "- https://... (verified on YYYY-MM-DD): what it says"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Proposed rule text
+      description: The rule, its level, and a one-line reason.
+      placeholder: "**SHOULD** · Tool names ...\n*Why:* ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Level
+      options: [MUST, MUST NOT, SHOULD, SHOULD NOT, MAY]
+    validations:
+      required: true
+  - type: input
+    id: window
+    attributes:
+      label: MCP revisions
+      description: First revision it applies to, and the last one if it ends.
+      placeholder: "since 2026-07-28"
+    validations:
+      required: true
+  - type: dropdown
+    id: testable
+    attributes:
+      label: Can the checker test it from a dump or endpoint?
+      options: ["Yes", "No, it is a review item", "Not sure"]
+    validations:
+      required: true

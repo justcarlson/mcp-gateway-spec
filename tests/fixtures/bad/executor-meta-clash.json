@@ -1,0 +1,89 @@
+{
+  "slug": "web-crawl",
+  "name": "Web crawl",
+  "source": "authored",
+  "routers": [
+    {
+      "path": "",
+      "title": "Web crawl",
+      "description": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "search",
+      "title": "Search the web",
+      "description": "Search the public web and return the top ten results with title, URL, and a short snippet for each.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search words."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true
+    },
+    {
+      "name": "execute",
+      "title": "Run crawl script",
+      "description": "Run a crawl script in the provider sandbox and return its output. The script can visit any URL it chooses.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "script": {
+            "type": "string",
+            "description": "Script source."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "script"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "readOnly": false
+    },
+    {
+      "name": "webcrawl_scrape_page",
+      "title": "Scrape page",
+      "description": "Scrape one web page and return its main content as Markdown, without navigation menus or ads.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Page URL."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "url"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true
+    }
+  ]
+}

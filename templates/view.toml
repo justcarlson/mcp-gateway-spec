@@ -1,0 +1,35 @@
+# View definition template. Rules: SPEC.md section 10 (VIEW-1 to VIEW-10), section 9 (discovery).
+# Keep one file per gateway in version control and generate the gateway's config from it (VIEW-7).
+# Product mappings: profiles/.
+
+spec_version = "0.1.0"
+
+[[view]]
+name = "support"                       # stable; becomes part of the URL or credential name
+audience = "Support agents and the support bot"
+owner = "support-platform"
+selector = { url = "/views/support" }  # or { credential = "support-bot" } (VIEW-1)
+discovery = "progressive"              # flat | progressive | code; flat only at <= 10 tools and 10k tokens (DISC-1)
+allowed_discovery = ["progressive", "code"]   # admin limit; clients choose within it (DISC-9)
+pinned = ["tracker/search_issues"]     # at most 5, same policy as all tools (DISC-5)
+groups = ["tracker", "kb"]             # new groups are never added automatically (VIEW-6)
+deny = ["tracker/delete_issue"]        # deny wins over allow (VIEW-3)
+fail = "closed"                        # unknown identity or policy error: no tools (VIEW-4)
+read_only_variant = "support-ro"       # VIEW-8
+trifecta_review = { private_data = true, untrusted_content = true, outbound = false, reviewed = 2026-10-30, by = "security" }  # SEC-1
+
+# One override record per tool per view (VIEW-9). Overrides are reviewed like source changes.
+[[view.override]]
+tool = "tracker/close_issue"
+approval = "required"
+description = "Close an issue after the user confirms. Use only for issues the user named by ID."
+
+[[view]]
+name = "support-ro"
+audience = "Read-only support dashboards"
+owner = "support-platform"
+selector = { credential = "support-dashboard" }
+discovery = "flat"
+groups = ["tracker"]
+allow = ["tracker/search_issues", "tracker/get_issue"]
+fail = "closed"

@@ -1,0 +1,29 @@
+name: Bug
+description: The checker or a document is wrong.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: For security issues, use [private reporting](https://github.com/justcarlson/mcp-gateway-spec/security/advisories/new) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command, the input (trimmed and anonymized), and the output.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `mcp-gateway-check --version`, or the commit.
+    validations:
+      required: true
