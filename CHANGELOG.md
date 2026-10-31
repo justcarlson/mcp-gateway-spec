@@ -19,7 +19,7 @@ Checker and profile fixes from a live check of a 38-app deployment and its edge.
 
 - `--user-agent VALUE`. A `--header-env User-Agent=ENV` header wins over it.
 - A "not checked" list in text and JSON reports: rules that had no data, such as ANN-4 for tools with no `approval` field and DESC-11 and DESC-12 for groups with no instruction text. These rules have not passed.
-- [profiles/executor.md](profiles/executor.md): the dump fields and where each comes from, what `kinds` changes, no per-tool description or annotation override in the apps SDK, one-to-one `renameTools` and the wrapper cost of CHG-1 aliases, and a Limitations section.
+- [profiles/executor.md](profiles/executor.md): the dump fields and where each comes from, what `kinds` changes, no per-tool description or annotation override in the apps SDK, one-to-one `renameTools` and the wrapper cost of CHG-1 aliases, a Limitations section, the admin-group VIEW-6 and no-read-only-variant VIEW-8 deviations, account reuse, and a pre-deploy check with a scratch app.
 - [profiles/cloudflare-portals.md](profiles/cloudflare-portals.md): portals drop server instructions (DISC-10 and DISC-11 cannot pass at a portal edge) and keep `title` and `outputSchema` after sync, verified on 2026-10-30. Also the User-Agent note, NAME-8 at a gateway edge, and a NAME-4 waiver example.
 
 ### Upstream

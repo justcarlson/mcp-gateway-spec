@@ -61,8 +61,11 @@ Catalog apps (installed with `apps.install`) belong to the Executor catalog. A c
 ## Views
 
 - New apps start private. Add them to views on purpose ([VIEW-6]).
+- A group audience replaces the creator's own access to the app. If operators must reach every app, an admin group in every audience puts each new app in the operator view at once. That is a [VIEW-6] deviation: record it with a reason and an owner, limit the group to owners and admins, and keep host and service views opt-in.
 - Generate audiences from one file in version control ([VIEW-7]).
+- If each host has one operator and approvals gate every write, a read-only variant of each view adds little. Record that as a [VIEW-8] deviation rather than leaving it implicit.
 - Accounts shared by several apps widen every view that holds one of them; list them ([VIEW-10]).
+- `GET /apps/<id>/accounts/app/<requirement>` lists every account of that provider, from any app, each with a `linked` flag. To reuse one, link it with `PUT /apps/<id>/accounts/app/<requirement>/<account>`. Starting a new connection instead creates a new account, which stays after the app is deleted.
 - Executor scopes by identity, so one URL with different credentials gives different views ([VIEW-1]).
 
 ## Deployment
@@ -71,6 +74,7 @@ Catalog apps (installed with `apps.install`) belong to the Executor catalog. A c
 - Back up the database and app sources before each deploy ([DEP-3]).
 - Give code execution memory and time limits, and split large jobs into one `execute` per app ([DEP-9]).
 - After deploy, run the checker on a dump of each changed app, and a canary call through a small read-only view ([DEP-8]).
+- Executor has no route that builds an app without activating it. To check a change before it goes live ([DEP-6]), deploy the source as a private scratch app in no view, link the existing account to it (see above), dump its tools, run `check` and `diff` against the live app's dump, then delete the scratch app. The dump format, `--waivers`, and `--aliases` work unchanged on the scratch app.
 
 ## Checking an Executor deployment
 
@@ -127,5 +131,6 @@ MCP_TOKEN=... mcp-gateway-check check https://gateway.example/mcp
 [VIEW-10]: ../SPEC.md#view-10
 [DEP-1]: ../SPEC.md#dep-1
 [DEP-3]: ../SPEC.md#dep-3
+[DEP-6]: ../SPEC.md#dep-6
 [DEP-8]: ../SPEC.md#dep-8
 [DEP-9]: ../SPEC.md#dep-9
