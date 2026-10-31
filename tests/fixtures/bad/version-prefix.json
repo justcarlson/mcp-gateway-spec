@@ -1,0 +1,92 @@
+{
+  "slug": "social",
+  "name": "Social",
+  "source": "catalog",
+  "routers": [
+    {
+      "path": "",
+      "title": "Social",
+      "description": "Public posts, profiles, and video transcripts from social networks. Use it to read a post from its URL."
+    }
+  ],
+  "tools": [
+    {
+      "name": "v1_get_post",
+      "title": "Get post",
+      "description": "Get one public post by URL, with its author, text, media, and engagement counts. For the spoken text of a video post, call v1_get_post_transcript.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Post URL, such as https://x.com/user/status/123."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "url"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true,
+      "approval": "none"
+    },
+    {
+      "name": "v1_get_post_transcript",
+      "title": "Get post transcript",
+      "description": "Get the transcript of a video post by URL. Returns the transcript text, or an empty string when the post has no speech.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Post URL, such as https://x.com/user/status/123."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "url"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true,
+      "approval": "none"
+    },
+    {
+      "name": "v2beta.get_profile",
+      "title": "Get profile",
+      "description": "Get a public profile by handle, with its display name, bio, and follower count. Use v1_get_post for a single post.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "handle": {
+            "type": "string",
+            "description": "Account handle without the @, such as 'example'."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "handle"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "readOnly": true,
+      "approval": "none"
+    }
+  ]
+}

@@ -34,8 +34,8 @@ Apply [SPEC.md](SPEC.md) to any change to an MCP gateway's surface or operations
 Python 3.12+, no dependencies.
 
 ```sh
-uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1 mcp-gateway-check --help
-# or: pipx install git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1
+uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.2.0 mcp-gateway-check --help
+# or: pipx install git+https://github.com/justcarlson/mcp-gateway-spec@v0.2.0
 ```
 
 ```sh

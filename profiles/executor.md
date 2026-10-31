@@ -24,6 +24,7 @@ This profile maps rules to features. It does not claim that Executor conforms; r
 - **Slugs ([GRP-2]).** Executor accepts `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`. The spec is narrower: `^[a-z][a-z0-9]{1,19}$`, no `-`. A kebab slug forces bracket syntax in code mode (`tools["media-requests"]`) and breaks the single-`_` edge prefix ([ADR-0003](../docs/decisions/0003-group-slug-charset.md)). Pick compound slugs for new apps; rename existing ones through [change management](../SPEC.md#12-change-management).
 - **Tool names ([NAME-3]).** A tool's name is its router key. For `mcpRouter` and OpenAPI apps it comes from upstream. Rename with `renameTools(router, name => newName)`; returning `undefined` drops the tool, which also makes `renameTools` the filter for [GRP-4].
 - **Renames are one to one.** `renameTools` maps each name to one exposed name, and when two names map to the same one, the first wins. It cannot serve the old and the new name together, so a [CHG-1] alias or a [CHG-2] deprecation window needs a hand-written wrapper tool under the old name that calls the new one.
+- **Version prefixes ([NAME-11]).** OpenAPI apps built from versioned paths get names such as `v1_twitter_tweet`. Strip the version with `renameTools` in authored apps; for catalog apps, see [Catalog apps](#catalog-apps).
 - **Nested names.** Some catalog apps use dotted names (`messages.list`). The checker turns `.` into `_` when it computes the exposed name for [NAME-5].
 - **Meta-tool clashes ([NAME-8]).** Rename upstream tools called `search`, `describe`, `call`, `execute`, `resume`, or `skills`. If callers already use the old name, each rename needs a [CHG-1] alias, which costs one wrapper tool per alias. Plan these renames before an app goes into a view.
 
@@ -112,6 +113,7 @@ MCP_TOKEN=... mcp-gateway-check check https://gateway.example/mcp
 [NAME-3]: ../SPEC.md#name-3
 [NAME-5]: ../SPEC.md#name-5
 [NAME-8]: ../SPEC.md#name-8
+[NAME-11]: ../SPEC.md#name-11
 [DESC-9]: ../SPEC.md#desc-9
 [DESC-10]: ../SPEC.md#desc-10
 [DESC-11]: ../SPEC.md#desc-11

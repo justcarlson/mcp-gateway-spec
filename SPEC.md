@@ -1,6 +1,6 @@
 # MCP Gateway Specification
 
-**Version:** 0.1.1 · **Status:** Draft for use · **Date:** 2026-10-30 · **MCP revisions:** [2026-07-28][S1] (target), [2025-11-25][S62]
+**Version:** 0.2.0 · **Status:** Draft for use · **Date:** 2026-10-31 · **MCP revisions:** [2026-07-28][S1] (target), [2025-11-25][S62]
 
 This specification sets rules for an MCP gateway's tool surface and operations: naming, grouping, descriptions, schemas, approvals, discovery, views, edge exposure, change management, deployment, observability, and security. Read it before you change a gateway's tools, groups, descriptions, approvals, edge exposure, or deployment, and before you set up a gateway for a new client.
 
@@ -131,6 +131,10 @@ A view selects groups (and optionally single tools) and fixes a discovery mode. 
 #### NAME-10
 **SHOULD** · checked · MCP 2025-11-25+ · Every tool has a `title`: a short human label such as "Get issue details".
 *Why:* clients show the title in approval prompts and tool lists. *Source:* [S1], [S16].
+
+#### NAME-11
+**SHOULD NOT** · checked · MCP 2025-11-25+ · A tool name, or a segment of a path name, starts with an upstream API version: `v1_twitter_tweet`, `v2beta_get_user`, or `api.v1.users`. Name the tool for the task (`get_tweet`), and keep the version in the group's upstream configuration.
+*Why:* the version is the upstream's routing detail, not a word a user says. It uses up the name budget, pushes the verb out of first place ([NAME-4](#name-4)), and forces a rename ([CHG-1](#chg-1)) when the upstream moves to `v2`. *Source:* [S8], [S15], [S61].
 
 ## 5. Grouping
 
@@ -363,6 +367,18 @@ Annotations are hints. MCP says clients must treat them as untrusted unless the 
 #### DISC-11
 **SHOULD** · manual · MCP 2025-11-25 only · The `initialize` result carries the view's instructions, and they are the same in every session for the same view and credential.
 *Why:* in 2025-11-25 the handshake is the only place for server instructions. *Source:* [S63], [S4].
+
+#### DISC-12
+**SHOULD** · manual · MCP 2025-11-25+ · A view that exposes only meta-tools states its capability categories in one short line, in the description of its search tool and in its server instructions ([DISC-10](#disc-10), [DISC-11](#disc-11)): "Reads social posts and video transcripts from a URL, searches the web, manages GitHub issues, and controls the home." The line names categories, not each group or tool, so it stays the same when one tool changes.
+*Why:* a client that sees only `search`, `describe`, and `call` cannot tell what the gateway does, so the model does not use it unless the user names it. Some edges drop server instructions, so the search description must carry the line too. *Source:* [S4], [S15], [S33], [S61].
+
+#### DISC-13
+**SHOULD** · manual · MCP 2025-11-25+ · A tool that is usually followed by another tool names that tool in its description: "For the spoken text of a video post, call `get_tweet_transcript`." Tools that are always called in sequence are one tool instead ([GRP-7](#grp-7)).
+*Why:* in progressive and code modes the model sees only the tools that its search returned, so it does not know that the follow-up tool exists. *Source:* [S8], [S61].
+
+#### DISC-14
+**SHOULD** · manual · MCP 2025-11-25+ · A view gives one entry for tasks that start from a URL ("what is this post about?"): a tool that accepts any supported URL and routes it to the correct tool, or a skill that maps each supported site to its tools.
+*Why:* users share links more often than they name a site, and without one entry the model must search for each site and choose among many site-specific tools. *Source:* [S8], [S31], [S61].
 
 ## 10. Views, scoping, and identity
 
@@ -627,6 +643,7 @@ Generated from the checker's registry; a test keeps the two in step. *MCP until*
 | [NAME-8](#name-8) | SHOULD NOT | checked | 2025-11-25 |  | Tool names reuse a meta-tool name |
 | [NAME-9](#name-9) | SHOULD | manual | 2025-11-25 |  | Tool names are specific and easy to tell apart |
 | [NAME-10](#name-10) | SHOULD | checked | 2025-11-25 |  | Tools have a human-readable title |
+| [NAME-11](#name-11) | SHOULD NOT | checked | 2025-11-25 |  | Tool names start with an upstream API version such as v1_ |
 | [GRP-1](#grp-1) | MUST | manual | 2025-11-25 |  | Every tool belongs to exactly one group with one owner |
 | [GRP-2](#grp-2) | MUST | checked | 2025-11-25 |  | Group slugs match ^[a-z][a-z0-9]{1,19}$ |
 | [GRP-3](#grp-3) | MUST | manual | 2025-11-25 |  | Group slugs are stable; renames follow change management |
@@ -680,6 +697,9 @@ Generated from the checker's registry; a test keeps the two in step. *MCP until*
 | [DISC-9](#disc-9) | SHOULD | manual | 2025-11-25 |  | Admins set the discovery mode per view; clients choose within it |
 | [DISC-10](#disc-10) | MUST | manual | 2026-07-28 |  | server/discover returns the view's instructions, the same on every request |
 | [DISC-11](#disc-11) | SHOULD | manual | 2025-11-25 | 2025-11-25 | The initialize result returns the view's instructions, the same in every session |
+| [DISC-12](#disc-12) | SHOULD | manual | 2025-11-25 |  | A meta-tool-only view states its capabilities in search and instructions |
+| [DISC-13](#disc-13) | SHOULD | manual | 2025-11-25 |  | Tools that are usually chained name the follow-up tool |
+| [DISC-14](#disc-14) | SHOULD | manual | 2025-11-25 |  | A view has one entry tool or routing skill for URL tasks |
 | [VIEW-1](#view-1) | MUST | manual | 2026-07-28 |  | A URL or a credential selects the view |
 | [VIEW-2](#view-2) | MUST | manual | 2025-11-25 |  | View policy filters list, search, describe, call, and execute |
 | [VIEW-3](#view-3) | MUST | manual | 2025-11-25 |  | Deny wins over allow |

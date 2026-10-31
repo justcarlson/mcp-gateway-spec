@@ -4,8 +4,17 @@ All notable changes to this spec and its checker. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-31
+
+Four new SHOULD rules from a live miss: a phone client did not use a meta-tool-only gateway to read a shared post until the user named the gateway, and the answer needed a second tool that nothing pointed to. New SHOULD rules make this a minor release. Level 1 does not change. The conformance profiles stay as frozen in 0.1.0, so they do not list the new rules.
+
 ### Added
 
+- [NAME-11](SPEC.md#name-11) **SHOULD NOT**, checked: a tool name or path segment starts with an upstream API version, such as `v1_twitter_tweet`. The checker skips the version word before it applies NAME-4 and NAME-7 to the rest of the name.
+- [DISC-12](SPEC.md#disc-12) **SHOULD**, manual: a view that exposes only meta-tools states its capability categories in one short, stable line, in the search tool description and in the server instructions.
+- [DISC-13](SPEC.md#disc-13) **SHOULD**, manual: a tool that is usually followed by another names that tool in its description.
+- [DISC-14](SPEC.md#disc-14) **SHOULD**, manual: a view gives one entry tool or routing skill for tasks that start from a URL.
+- Checklist items for the new rules in the tool description, change review, and new-client setup templates. An Executor profile note on version prefixes.
 - [docs/upstream-agent.md](docs/upstream-agent.md): a runbook for an agent that updates the repo for a new MCP revision, and the T3 Code webhook task and GitHub webhook that start it.
 - `scripts/track_upstream.py` labels tracking issues `mcp-upstream`. When an issue moves to a new upstream tag, such as RC to final, it applies the label again so the webhook fires once per stage. A run after a failed label call adds the missing label.
 
@@ -13,6 +22,10 @@ All notable changes to this spec and its checker. The format follows [Keep a Cha
 
 - The upstream tracking workflow runs daily instead of weekly, one run at a time.
 - `scripts/track_upstream.py` reads closed tracking issues too. It reopens one only when upstream ships a new tag for it.
+
+### Upstream
+
+- No change. Supported MCP revisions: **2026-07-28** (target), 2025-11-25.
 
 ## [0.1.1] - 2026-10-30
 
@@ -59,5 +72,6 @@ First release.
 - Supported MCP revisions: **2026-07-28** (target), 2025-11-25. Pinned by tag and commit in [upstream.json](upstream.json).
 - Rules new in 2026-07-28: DISC-8, DISC-10, VIEW-1, VIEW-5, CHG-11. DISC-11 applies to 2025-11-25 only.
 
+[0.2.0]: https://github.com/justcarlson/mcp-gateway-spec/releases/tag/v0.2.0
 [0.1.1]: https://github.com/justcarlson/mcp-gateway-spec/releases/tag/v0.1.1
 [0.1.0]: https://github.com/justcarlson/mcp-gateway-spec/releases/tag/v0.1.0

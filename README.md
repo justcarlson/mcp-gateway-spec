@@ -40,7 +40,7 @@ The published numbers point the same way:
 Python 3.12 or later. No dependencies.
 
 ```sh
-uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1 mcp-gateway-check check tools.json
+uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.2.0 mcp-gateway-check check tools.json
 ```
 
 `tools.json` is a `tools/list` result, a JSON-RPC response, a tool array, or a directory with one file per group. Real output for a small group with bad annotations:
@@ -105,16 +105,16 @@ flowchart LR
 
 ## Rule catalog
 
-116 rules, 41 tested by the checker. Each has a stable ID, a level, a one-line reason, a source, and the MCP revisions it applies to. The [rule index](SPEC.md#17-rule-index) lists them all.
+120 rules, 42 tested by the checker. Each has a stable ID, a level, a one-line reason, a source, and the MCP revisions it applies to. The [rule index](SPEC.md#17-rule-index) lists them all.
 
 | Family | Rules | Checked | Covers |
 |---|---:|---:|---|
-| [NAME](SPEC.md#4-naming) | 10 | 9 | Character set, length budget, verb first, no slug repeats |
+| [NAME](SPEC.md#4-naming) | 11 | 10 | Character set, length budget, verb first, no slug or version prefixes |
 | [GRP](SPEC.md#5-grouping) | 8 | 3 | Slugs, group size, one purpose per group |
 | [DESC](SPEC.md#6-descriptions-and-group-instructions) | 14 | 10 | Length, first sentence, no secrets, no false safety claims |
 | [SCHEMA](SPEC.md#7-schemas-responses-and-errors) | 12 | 6 | Input schemas, output schemas, errors, pagination |
 | [ANN](SPEC.md#8-annotations-and-approvals) | 8 | 3 | Hints, approval by default, exceptions in source |
-| [DISC](SPEC.md#9-discovery-modes) | 11 | 2 | Flat, progressive, and code modes; server instructions |
+| [DISC](SPEC.md#9-discovery-modes) | 14 | 2 | Flat, progressive, and code modes; server instructions; capability line, follow-up tools, URL entry |
 | [VIEW](SPEC.md#10-views-scoping-and-identity) | 10 | 0 | Selection by URL or credential, deny wins, fail closed |
 | [EDGE](SPEC.md#11-edge-exposure) | 7 | 1 | Allowlists, prefixes, metadata sync, adapters |
 | [CHG](SPEC.md#12-change-management) | 11 | 5 | Aliases, additive schema changes, review, cache hints |
@@ -153,6 +153,7 @@ The spec version and the MCP revision are separate. [upstream.json](upstream.jso
 
 | Spec version | MCP revisions | Conformance profiles |
 |---|---|---|
+| 0.2.0 | 2026-07-28 (target), 2025-11-25 | [mcp-2026-07-28](conformance/mcp-2026-07-28.yaml), [mcp-2025-11-25](conformance/mcp-2025-11-25.yaml), as frozen in 0.1.0; they do not list NAME-11 or DISC-12 to DISC-14 |
 | 0.1.1 | 2026-07-28 (target), 2025-11-25 | [mcp-2026-07-28](conformance/mcp-2026-07-28.yaml), [mcp-2025-11-25](conformance/mcp-2025-11-25.yaml), as frozen in 0.1.0 |
 | 0.1.0 | 2026-07-28 (target), 2025-11-25 | [mcp-2026-07-28](conformance/mcp-2026-07-28.yaml), [mcp-2025-11-25](conformance/mcp-2025-11-25.yaml) |
 
@@ -162,10 +163,10 @@ The spec version and the MCP revision are separate. [upstream.json](upstream.jso
 
 ```sh
 # Claude Code
-git clone --depth 1 --branch v0.1.1 https://github.com/justcarlson/mcp-gateway-spec ~/.claude/skills/mcp-gateway-spec
+git clone --depth 1 --branch v0.2.0 https://github.com/justcarlson/mcp-gateway-spec ~/.claude/skills/mcp-gateway-spec
 
 # Codex
-git clone --depth 1 --branch v0.1.1 https://github.com/justcarlson/mcp-gateway-spec ~/.agents/skills/mcp-gateway-spec
+git clone --depth 1 --branch v0.2.0 https://github.com/justcarlson/mcp-gateway-spec ~/.agents/skills/mcp-gateway-spec
 ```
 
 ## Setting up a gateway for a new client

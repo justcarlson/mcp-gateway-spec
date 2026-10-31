@@ -103,6 +103,15 @@
         "NAME-5"
       ],
       "note": "Catalog app with generated camelCase paths that overflow the 64-character budget."
+    },
+    {
+      "input": "bad/version-prefix.json",
+      "args": [],
+      "exit": 0,
+      "rules": [
+        "NAME-11"
+      ],
+      "note": "Catalog app whose tool names and path segments start with the upstream API version (v1_, v2beta)."
     }
   ]
 }

@@ -44,6 +44,10 @@ Approvals were declared in app code: `always()` for anything not marked read-onl
 | The portal served a cached copy of descriptions and schemas until someone ran a sync | [EDGE-3](../SPEC.md#edge-3) |
 | One large code-mode program crashed the gateway with an out-of-memory error | [DEP-9](../SPEC.md#dep-9) |
 | Views file comments and docs still described the previous gateway | [DEP-10](../SPEC.md#dep-10) |
+| 196 catalog tools in one scraping app carried the upstream API version: `v1_twitter_tweet` (checked on 2026-10-31) | [NAME-11](../SPEC.md#name-11) |
+| A phone client was asked about a shared social post and did not use the gateway until the user named it. It saw only the meta-tools, and neither the search description nor the instructions said what the gateway can do | [DISC-12](../SPEC.md#disc-12) |
+| The answer needed a second tool (the post's video transcript), and nothing in the first tool's description named it | [DISC-13](../SPEC.md#disc-13) |
+| Each site had its own tools, with no single entry for "read this URL" | [DISC-14](../SPEC.md#disc-14) |
 | The only written naming rule covered edge adapters (`<domain>_<verb>`); nothing covered apps | This spec |
 
 ## What worked

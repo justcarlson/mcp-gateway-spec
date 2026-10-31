@@ -28,6 +28,8 @@ Use when a new client, agent, or audience needs gateway access. The goal: one vi
 - [ ] Up to 5 pinned tools for the most common calls (DISC-5)
 - [ ] Read-only variant if the view can write (VIEW-8)
 - [ ] Server instructions name the groups and say when to search (DISC-7)
+- [ ] Meta-tool-only view: one short capability line in the search tool description and the server instructions (DISC-12)
+- [ ] One entry tool or routing skill for tasks that start from a URL (DISC-14)
 
 ## 4. Credentials
 

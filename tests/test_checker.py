@@ -96,6 +96,18 @@ class Naming(unittest.TestCase):
         self.assertEqual(inv.tools[0].exposed, "docs_" + "a" * 60)
         self.assertIn("NAME-5", {f.rule for f in run_checks(inv)})
 
+    def test_upstream_version_prefix(self):
+        flagged = ["v1_twitter_tweet", "v2beta_get_user", "v1alpha2_list_items", "api.v1.list_users", "v3GetUser"]
+        clean = ["get_v1_config", "vault_get_secret", "v_get_item", "verify_token", "get_issue"]
+        for name, expected in [(n, True) for n in flagged] + [(n, False) for n in clean]:
+            with self.subTest(name):
+                inv = build_inventory([("x", {"tools": [tool(name)]})], namespace="none")
+                self.assertEqual("NAME-11" in {f.rule for f in run_checks(inv)}, expected)
+
+    def test_version_prefix_is_not_also_a_noun_first_name(self):
+        inv = build_inventory([("x", {"tools": [tool("v1_get_tweet")]})], namespace="none")
+        self.assertEqual({f.rule for f in run_checks(inv)}, {"NAME-11"})
+
 
 class Discovery(unittest.TestCase):
     def test_flat_thresholds(self):
