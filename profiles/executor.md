@@ -1,6 +1,6 @@
 # Profile: Executor
 
-How [SPEC.md](../SPEC.md) maps onto [Executor](https://executor.sh/docs/concepts/tools-and-approvals) ([S44]), a host that runs apps and serves them to agents through a few meta-tools. Based on a stock image with the apps SDK at `0.0.1-beta.116`, as used in the [reference deployment](../research/03-reference-deployment.md). Executor changes fast; check the version you run.
+How [SPEC.md](../SPEC.md) maps onto [Executor](https://executor.sh/docs/concepts/tools-and-approvals) ([S44]), a host that runs apps and serves them to agents through a few meta-tools. Based on Executor `2.0.0-beta.31` with the apps SDK at `0.0.1-beta.116`, verified on 2026-10-30 on a 38-app deployment (the [reference deployment](../research/03-reference-deployment.md)). Executor changes fast; check the version you run.
 
 This profile maps rules to features. It does not claim that Executor conforms; run the checker on your own deployment.
 
@@ -23,14 +23,15 @@ This profile maps rules to features. It does not claim that Executor conforms; r
 
 - **Slugs ([GRP-2]).** Executor accepts `^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`. The spec is narrower: `^[a-z][a-z0-9]{1,19}$`, no `-`. A kebab slug forces bracket syntax in code mode (`tools["media-requests"]`) and breaks the single-`_` edge prefix ([ADR-0003](../docs/decisions/0003-group-slug-charset.md)). Pick compound slugs for new apps; rename existing ones through [change management](../SPEC.md#12-change-management).
 - **Tool names ([NAME-3]).** A tool's name is its router key. For `mcpRouter` and OpenAPI apps it comes from upstream. Rename with `renameTools(router, name => newName)`; returning `undefined` drops the tool, which also makes `renameTools` the filter for [GRP-4].
+- **Renames are one to one.** `renameTools` maps each name to one exposed name, and when two names map to the same one, the first wins. It cannot serve the old and the new name together, so a [CHG-1] alias or a [CHG-2] deprecation window needs a hand-written wrapper tool under the old name that calls the new one.
 - **Nested names.** Some catalog apps use dotted names (`messages.list`). The checker turns `.` into `_` when it computes the exposed name for [NAME-5].
-- **Meta-tool clashes ([NAME-8]).** Rename upstream tools called `search`, `describe`, `call`, `execute`, `resume`, or `skills`.
+- **Meta-tool clashes ([NAME-8]).** Rename upstream tools called `search`, `describe`, `call`, `execute`, `resume`, or `skills`. If callers already use the old name, each rename needs a [CHG-1] alias, which costs one wrapper tool per alias. Plan these renames before an app goes into a view.
 
 ## Descriptions
 
 - Write the app description as *when* to use the app ([DESC-9], [DESC-10]); keep `package.json`'s `executor.title` and description in step with it.
 - Put *how* text in the app's skill, not in the description ([DESC-11], [DESC-14]).
-- For `mcpRouter` apps, descriptions pass through. Fix them upstream if you own the server; otherwise override in the app, or waive with the vendor as the reason.
+- For `mcpRouter` apps, descriptions and annotations pass through. The apps SDK has no per-tool override (no `withDescription` or `withAnnotations`); only re-wrapping the tools with `dynamicRouter` could change them. Fix them upstream if you own the server; otherwise waive the finding with the vendor as the owner.
 
 ## Approvals ([section 8](../SPEC.md#8-annotations-and-approvals))
 
@@ -45,8 +46,9 @@ tool => tool.kind === "mutation" ? always() : undefined
 ```
 
 - Upstream hints are untrusted ([ANN-3]). Use `kinds` (second argument to `mcpRouter`) to mark the tools you reviewed as `"query"`, rather than relying on `readOnlyHint` alone.
+- `kinds` sets the tool's kind and `kindConfirmed: true`. It does not change `annotations`, which keep the upstream hints. The checker treats `kindConfirmed: true` with `readOnly: true` as the gateway's review under [ANN-3]: it raises no [ANN-2] error and no [ANN-4] for that tool. If upstream sets `readOnlyHint` and `destructiveHint` both true, the checker gives info for the server owner. If upstream hints declare writes, it gives a warning to confirm the review.
 - Every `never()` or custom exception is an [ANN-7] record: add a comment with the reason and reviewer.
-- The checker reads a tool's `readOnly` field (Executor's reviewed kind) as the approval state in dumps: `readOnly: true` means no approval, anything else means approval required.
+- `readOnly` in the admin tools response is the tool's **kind** (`true` for a query, `false` for a mutation), not its approval. Approval comes from app code, so an app that uses `never()` runs mutations without approval. The checker fails [ANN-4] for a tool whose dump says `readOnly: false` and `approval: "none"`.
 
 ## Catalog apps
 
@@ -59,8 +61,11 @@ Catalog apps (installed with `apps.install`) belong to the Executor catalog. A c
 ## Views
 
 - New apps start private. Add them to views on purpose ([VIEW-6]).
+- A group audience replaces the creator's own access to the app. If operators must reach every app, an admin group in every audience puts each new app in the operator view at once. That is a [VIEW-6] deviation: record it with a reason and an owner, limit the group to owners and admins, and keep host and service views opt-in.
 - Generate audiences from one file in version control ([VIEW-7]).
+- If each host has one operator and approvals gate every write, a read-only variant of each view adds little. Record that as a [VIEW-8] deviation rather than leaving it implicit.
 - Accounts shared by several apps widen every view that holds one of them; list them ([VIEW-10]).
+- `GET /apps/<id>/accounts/app/<requirement>` lists every account of that provider, from any app, each with a `linked` flag. To reuse one, link it with `PUT /apps/<id>/accounts/app/<requirement>/<account>`. Starting a new connection instead creates a new account, which stays after the app is deleted.
 - Executor scopes by identity, so one URL with different credentials gives different views ([VIEW-1]).
 
 ## Deployment
@@ -69,16 +74,31 @@ Catalog apps (installed with `apps.install`) belong to the Executor catalog. A c
 - Back up the database and app sources before each deploy ([DEP-3]).
 - Give code execution memory and time limits, and split large jobs into one `execute` per app ([DEP-9]).
 - After deploy, run the checker on a dump of each changed app, and a canary call through a small read-only view ([DEP-8]).
+- Executor has no route that builds an app without activating it. To check a change before it goes live ([DEP-6]), deploy the source as a private scratch app in no view, link the existing account to it (see above), dump its tools, run `check` and `diff` against the live app's dump, then delete the scratch app. The dump format, `--waivers`, and `--aliases` work unchanged on the scratch app.
 
 ## Checking an Executor deployment
 
-Export each app as JSON: `{slug, name, source, routers: [{path, title, description}], tools: [...]}`, one file per app, where `source` is `authored` or `catalog`. Then:
+Export each app as JSON: `{slug, name, source, routers: [{path, title, description}], tools: [...]}`, one file per app, where `source` is `authored` or `catalog`. Each tool carries the admin tools fields plus one field you derive:
+
+| Field | From | Meaning |
+|---|---|---|
+| `name`, `title`, `description`, `annotations`, `inputSchema`, `outputSchema` | Admin tools response | As served |
+| `readOnly` | Admin tools response | Kind: `true` query, `false` mutation |
+| `kindConfirmed` | Admin tools response | `true` when `kinds` set the kind |
+| `approval` | **Your dump script**, from app source | `"required"` or `"none"`: the policy the app's `withApprovals` gives the tool |
+
+The dump script must emit `approval`, because the admin response does not have it: read each app's approval function (`always()`, `never()`, or a custom function) and apply it to the tool. If a tool has no `approval` field, the checker reports its approval as unknown and lists [ANN-4] under "not checked" instead of guessing. Then:
 
 ```sh
 mcp-gateway-check check dumps/ --namespace path
 ```
 
 The checker treats a directory of app files as a path-namespaced, progressive view. It skips files that do not contain tools, such as an `index.json`.
+
+### Limitations
+
+- **Instructions.** The admin tools response lists an app's skill names, not the instruction text, so a dump has no `instructions`. The checker lists [DESC-11] and [DESC-12] under "not checked" for such groups; they have not passed. Check skill length by hand, or add the skill text to the dump as `instructions`.
+- **Approval.** Only as good as the dump script's reading of app source. Review custom approval functions by hand.
 
 For the live endpoint, the meta-tools are the only tools listed, so a live check tests the meta-tool surface, not the apps:
 
@@ -95,11 +115,15 @@ MCP_TOKEN=... mcp-gateway-check check https://gateway.example/mcp
 [DESC-9]: ../SPEC.md#desc-9
 [DESC-10]: ../SPEC.md#desc-10
 [DESC-11]: ../SPEC.md#desc-11
+[DESC-12]: ../SPEC.md#desc-12
 [DESC-14]: ../SPEC.md#desc-14
+[ANN-2]: ../SPEC.md#ann-2
 [ANN-3]: ../SPEC.md#ann-3
 [ANN-4]: ../SPEC.md#ann-4
 [ANN-5]: ../SPEC.md#ann-5
 [ANN-7]: ../SPEC.md#ann-7
+[CHG-1]: ../SPEC.md#chg-1
+[CHG-2]: ../SPEC.md#chg-2
 [VIEW-1]: ../SPEC.md#view-1
 [VIEW-6]: ../SPEC.md#view-6
 [VIEW-7]: ../SPEC.md#view-7
@@ -107,5 +131,6 @@ MCP_TOKEN=... mcp-gateway-check check https://gateway.example/mcp
 [VIEW-10]: ../SPEC.md#view-10
 [DEP-1]: ../SPEC.md#dep-1
 [DEP-3]: ../SPEC.md#dep-3
+[DEP-6]: ../SPEC.md#dep-6
 [DEP-8]: ../SPEC.md#dep-8
 [DEP-9]: ../SPEC.md#dep-9

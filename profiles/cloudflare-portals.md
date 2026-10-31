@@ -35,6 +35,27 @@ When the portal fronts a gateway such as [Executor](executor.md), expose only th
 - Give the portal its own gateway credential, scoped to a view built for the portal ([EDGE-4], [SEC-4]).
 - The portal must not approve calls on a person's behalf; approvals pause in the gateway and reach a person ([EDGE-7]).
 - Adapter tools follow this spec like any other tool, and a caller map lists the gateway paths each adapter calls ([EDGE-5], [CHG-8]).
+- The checker skips [NAME-8] for a server whose exposed tools are two or more meta-tools and nothing else, since passing them through is the point. It still flags a meta-tool name inside an ordinary server, such as `adapters_search`.
+- Adapter names like `<domain>_<verb>` (for example `media_request`) give [NAME-4] info findings. These are advice, not errors. To record the choice, waive them:
+
+```toml
+[[waiver]]
+rule = "NAME-4"
+target = "adapters"
+reason = "Adapter names are domain first, so related tools sort together"
+owner = "edge maintainers"
+expires = 2027-04-15
+```
+
+## Server instructions
+
+The portal does not pass server instructions through. Its `initialize` result has empty `instructions`, even after a sync, so [DISC-10] and [DISC-11] cannot pass at a portal edge. Put that guidance somewhere the agent still sees it:
+
+- in tool descriptions, for short rules about one tool;
+- in a skill, if the agent's client loads skills;
+- in the gateway behind the portal, which the agent reads through its own meta-tools (for example Executor's `skills`).
+
+Verified on 2026-10-30: after `cf mcp servers sync`, the portal drops `instructions` but keeps each tool's `title` and `outputSchema`.
 
 ## Metadata sync ([EDGE-3])
 
@@ -62,10 +83,16 @@ CF_ID=... CF_SECRET=... mcp-gateway-check check https://portal.example/mcp \
 
 Header values come from the environment, never from the command line ([DEP-2]).
 
+The checker sends `User-Agent: mcp-gateway-check/<version>`. A request with no User-Agent can get a 403 from Cloudflare's browser integrity check. Use `--user-agent` to send another value; a `--header-env User-Agent=ENV` header wins over both.
+
 [S20]: https://blog.cloudflare.com/code-mode-mcp/ "Cloudflare blog: Code Mode for MCP"
 [S40]: https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/mcp-portals/ "Cloudflare: MCP server portals"
 [GRP-2]: ../SPEC.md#grp-2
+[NAME-4]: ../SPEC.md#name-4
 [NAME-5]: ../SPEC.md#name-5
+[NAME-8]: ../SPEC.md#name-8
+[DISC-10]: ../SPEC.md#disc-10
+[DISC-11]: ../SPEC.md#disc-11
 [VIEW-9]: ../SPEC.md#view-9
 [EDGE-1]: ../SPEC.md#edge-1
 [EDGE-2]: ../SPEC.md#edge-2

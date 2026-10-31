@@ -40,7 +40,8 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "readOnly": true
+      "readOnly": true,
+      "approval": "none"
     },
     {
       "name": "get_current_conditions",
@@ -65,7 +66,8 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "readOnly": true
+      "readOnly": true,
+      "approval": "none"
     }
   ]
 }

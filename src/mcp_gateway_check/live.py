@@ -18,6 +18,8 @@ from .rules import STATELESS
 
 HANDSHAKE_PROTOCOL = "2025-11-25"
 CLIENT_INFO = {"name": "mcp-gateway-check", "version": __version__}
+# Some edges (Cloudflare Browser Integrity Check) refuse requests without a User-Agent.
+USER_AGENT = f"mcp-gateway-check/{__version__}"
 _META = "io.modelcontextprotocol/"
 
 
@@ -131,6 +133,7 @@ def fetch_tools(
     header_envs: dict[str, str] | None = None,
     timeout: float = 30.0,
     protocol: str = STATELESS,
+    user_agent: str = USER_AGENT,
 ) -> dict[str, Any]:
     """Return {"tools": [...], "live": {...}} from a live endpoint.
 
@@ -138,7 +141,7 @@ def fetch_tools(
     server refuses, or for earlier revisions, it uses the initialize handshake.
     "live" records the protocol and mode used and the first page's cache fields.
     """
-    headers: dict[str, str] = {}
+    headers: dict[str, str] = {"User-Agent": user_agent}
     token = os.environ.get(token_env)
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -146,6 +149,7 @@ def fetch_tools(
         value = os.environ.get(env)
         if value is None:
             raise InputError(f"environment variable {env} for header {header} is not set")
+        # urllib folds header case and keeps the last value, so this wins over the defaults above.
         headers[header] = value
     client = _Client(url, headers, timeout, protocol)
     if client.stateless:

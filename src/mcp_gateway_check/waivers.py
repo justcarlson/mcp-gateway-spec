@@ -72,7 +72,8 @@ def apply_waivers(
 ) -> list[Finding]:
     """Mark waived findings and add CONF-3 findings for expired or unused waivers.
 
-    A waiver whose rules are all in `skipped` (outside the MCP revision) is not unused.
+    A waiver whose rules are all in `skipped` (outside the MCP revision, or not evaluated
+    by this command) is not unused.
     """
     active = [w for w in waivers if w.expires >= today]
     for f in findings:

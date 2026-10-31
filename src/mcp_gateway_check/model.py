@@ -47,14 +47,28 @@ class Tool:
 
     @property
     def approval(self) -> str | None:
-        """Effective approval policy when the input records it: "required" or "none"."""
+        """Effective approval policy: "required", "none", or None when the input does not say."""
         value = self.raw.get("approval")
-        if value in ("required", "none"):
+        return value if value in ("required", "none") else None
+
+    @property
+    def kind(self) -> str | None:
+        """The gateway's tool kind, "query" or "mutation", when the input records it.
+
+        Executor admin dumps carry it as `readOnly`. It is the kind, not the approval:
+        an app can run a mutation without approval.
+        """
+        value = self.raw.get("kind")
+        if value in ("query", "mutation"):
             return value
-        # Executor admin dumps: readOnly true means the tool runs without approval.
         if isinstance(self.raw.get("readOnly"), bool):
-            return "none" if self.raw["readOnly"] else "required"
+            return "query" if self.raw["readOnly"] else "mutation"
         return None
+
+    @property
+    def reviewed_read_only(self) -> bool:
+        """The gateway's own review classed the tool as a read (ANN-3), e.g. Executor `kinds`."""
+        return self.raw.get("kindConfirmed") is True and self.kind == "query"
 
 
 @dataclass
@@ -65,6 +79,7 @@ class Group:
     instructions: str | None = None
     source: str | None = None
     has_metadata: bool = False  # False when the group was inferred from names or files
+    instructions_known: bool = True  # False when the input format leaves instructions out (Executor dumps)
     tools: list[Tool] = field(default_factory=list)
 
 
@@ -140,6 +155,7 @@ def group_metadata(doc: Any) -> Group | None:
             instructions=doc.get("instructions"),
             source=doc.get("source"),
             has_metadata=True,
+            instructions_known="instructions" in doc,
         )
     return None
 

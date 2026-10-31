@@ -22,7 +22,7 @@ Without rules, a gateway grows the way its upstream servers do. One anonymized [
 - two tools marked both read-only and destructive, so they ran without approval;
 - a description of 11,620 characters, almost three times what Claude Code shows the model.
 
-The checker found 54 errors and 9,521 warnings in that gateway's 2,853 tools.
+The checker found 635 errors and 9,520 warnings in that gateway's 2,853 tools, including 581 mutations that ran without approval.
 
 The published numbers point the same way:
 
@@ -40,7 +40,7 @@ The published numbers point the same way:
 Python 3.12 or later. No dependencies.
 
 ```sh
-uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.0 mcp-gateway-check check tools.json
+uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.1 mcp-gateway-check check tools.json
 ```
 
 `tools.json` is a `tools/list` result, a JSON-RPC response, a tool array, or a directory with one file per group. Real output for a small group with bad annotations:
@@ -49,6 +49,7 @@ uvx --from git+https://github.com/justcarlson/mcp-gateway-spec@v0.1.0 mcp-gatewa
 4 tools in 1 groups (namespace: path, discovery: progressive)
 MCP revision 2026-07-28
 skipped 1 rule outside MCP 2026-07-28: DISC-11
+not checked: DESC-11, DESC-12 for 1 groups (no instruction text); not a pass
 
 error ANN-2 MUST: readOnlyHint is true only for tools without side effects (2)
       home/get_live_context: readOnlyHint and destructiveHint are both true
@@ -64,7 +65,7 @@ warn  DESC-8 MUST NOT: Text claims safety behavior that the gateway does not enf
       home/list_devices: description says read-only but readOnlyHint is false (heuristic)
 
 4 errors, 4 warnings, 0 info, 0 waived
-checked rules: Level 1 FAIL, Level 2 FAIL (manual rules need the review checklist)
+checked rules: Level 1 FAIL, Level 2 FAIL (manual rules need the review checklist; some checked rules had no data, see 'not checked')
 ```
 
 It exits 1 on any MUST violation, so it can gate CI. More options:
@@ -152,6 +153,7 @@ The spec version and the MCP revision are separate. [upstream.json](upstream.jso
 
 | Spec version | MCP revisions | Conformance profiles |
 |---|---|---|
+| 0.1.1 | 2026-07-28 (target), 2025-11-25 | [mcp-2026-07-28](conformance/mcp-2026-07-28.yaml), [mcp-2025-11-25](conformance/mcp-2025-11-25.yaml), as frozen in 0.1.0 |
 | 0.1.0 | 2026-07-28 (target), 2025-11-25 | [mcp-2026-07-28](conformance/mcp-2026-07-28.yaml), [mcp-2025-11-25](conformance/mcp-2025-11-25.yaml) |
 
 ## Use it with your agent
@@ -160,10 +162,10 @@ The spec version and the MCP revision are separate. [upstream.json](upstream.jso
 
 ```sh
 # Claude Code
-git clone --depth 1 --branch v0.1.0 https://github.com/justcarlson/mcp-gateway-spec ~/.claude/skills/mcp-gateway-spec
+git clone --depth 1 --branch v0.1.1 https://github.com/justcarlson/mcp-gateway-spec ~/.claude/skills/mcp-gateway-spec
 
 # Codex
-git clone --depth 1 --branch v0.1.0 https://github.com/justcarlson/mcp-gateway-spec ~/.agents/skills/mcp-gateway-spec
+git clone --depth 1 --branch v0.1.1 https://github.com/justcarlson/mcp-gateway-spec ~/.agents/skills/mcp-gateway-spec
 ```
 
 ## Setting up a gateway for a new client
