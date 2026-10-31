@@ -293,14 +293,13 @@ def finding(
 ) -> Finding:
     """Make a finding. Severity follows the rule level; heuristics drop one step."""
     rule = RULES[rule_id]
-    if severity is not None:
-        pass
-    elif rule.mandatory:
-        severity = "warning" if heuristic else "error"
-    elif rule.level.startswith("SHOULD"):
-        severity = "info" if heuristic else "warning"
-    else:
-        severity = "info"
+    if severity is None:
+        if rule.mandatory:
+            severity = "warning" if heuristic else "error"
+        elif rule.level.startswith("SHOULD"):
+            severity = "info" if heuristic else "warning"
+        else:
+            severity = "info"
     return Finding(
         rule=rule_id,
         severity=severity,
@@ -385,9 +384,12 @@ def check_tool(inv: Inventory, tool: Tool) -> Iterator[Finding]:
 
 
 def _passthrough(inv: Inventory, tool: Tool) -> bool:
-    """The tool's group holds only meta-tools: an edge serving a gateway's surface (NAME-8 exempt)."""
+    """The tool's group holds two or more tools, all meta-tools: an edge serving a gateway (NAME-8 exempt).
+
+    One tool named `search` is an ordinary group's tool, so it still needs a rename.
+    """
     group = inv.groups.get(tool.group) if tool.group else None
-    return group is not None and all(t.leaf.lower() in inv.meta_tools for t in group.tools)
+    return group is not None and len(group.tools) > 1 and all(t.leaf.lower() in inv.meta_tools for t in group.tools)
 
 
 def _naming(inv: Inventory, tool: Tool) -> Iterator[Finding]:
@@ -457,6 +459,13 @@ def _description(tool: Tool) -> Iterator[Finding]:
         elif tool.approval == "required" and ann.get("readOnlyHint") is not True:
             yield finding(
                 "DESC-8", "description says read-only but the gateway requires approval", tool=tool, heuristic=True
+            )
+        elif tool.kind == "mutation":
+            yield finding(
+                "DESC-8",
+                "description says read-only but the gateway classes it as a mutation",
+                tool=tool,
+                heuristic=True,
             )
 
 
@@ -550,6 +559,14 @@ def _annotations(tool: Tool) -> Iterator[Finding]:
                 heuristic=True,
                 severity="info",
             )
+        elif ann.get("destructiveHint") is True or ann.get("readOnlyHint") is False:
+            yield finding(
+                "ANN-2",
+                "the gateway reviewed it as a read, but upstream hints declare writes; confirm the review",
+                tool=tool,
+                heuristic=True,
+                severity="warning",
+            )
         return
     if read_only and ann.get("destructiveHint") is True:
         yield finding("ANN-2", "readOnlyHint and destructiveHint are both true", tool=tool)
@@ -562,6 +579,9 @@ def _annotations(tool: Tool) -> Iterator[Finding]:
             yield finding("ANN-4", "runs without approval but the gateway classes it as a mutation", tool=tool)
         elif ann.get("destructiveHint") is True or ann.get("readOnlyHint") is False:
             yield finding("ANN-4", "runs without approval but its hints declare writes", tool=tool)
+        elif tool.kind is None and not read_only:
+            # Unknown classification means approval required.
+            yield finding("ANN-4", "runs without approval but nothing classifies it as a read", tool=tool)
         elif not read_only and (verb in WRITE_VERBS - READ_VERBS or DESTRUCTIVE & set(leaf_words)):
             yield finding(
                 "ANN-4", f"runs without approval but the name suggests a write ({verb!r})", tool=tool, heuristic=True
@@ -593,7 +613,12 @@ def check_group(inv: Inventory, group: Group) -> Iterator[Finding]:
             desc
             and APPROVAL_CLAIM.search(desc)
             and group.tools
-            and all(t.annotations.get("readOnlyHint") is True or t.approval == "none" for t in group.tools)
+            and all(
+                t.annotations.get("readOnlyHint") is True
+                or t.approval == "none"
+                or (t.approval is None and t.kind == "query")
+                for t in group.tools
+            )
         ):
             yield finding(
                 "DESC-8",
@@ -664,10 +689,10 @@ def check_live(inv: Inventory) -> Iterator[Finding]:
 def not_checked(inv: Inventory) -> list[dict[str, Any]]:
     """Checked rules the input has no data for. They neither pass nor fail."""
     out = []
-    tools = [t for t in inv.tools if t.approval is None and not inv.is_meta(t)]
+    tools = [t for t in inv.tools if t.approval is None and not t.reviewed_read_only and not inv.is_meta(t)]
     if tools:
         out.append({"rules": ["ANN-4"], "count": len(tools), "of": "tools", "reason": "no approval field"})
-    groups = [g for g in inv.groups.values() if not (g.instructions or "").strip()]
+    groups = [g for g in inv.groups.values() if g.has_metadata and not g.instructions_known]
     if groups:
         out.append(
             {"rules": ["DESC-11", "DESC-12"], "count": len(groups), "of": "groups", "reason": "no instruction text"}

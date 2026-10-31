@@ -79,6 +79,7 @@ class Group:
     instructions: str | None = None
     source: str | None = None
     has_metadata: bool = False  # False when the group was inferred from names or files
+    instructions_known: bool = True  # False when the input format leaves instructions out (Executor dumps)
     tools: list[Tool] = field(default_factory=list)
 
 
@@ -154,6 +155,7 @@ def group_metadata(doc: Any) -> Group | None:
             instructions=doc.get("instructions"),
             source=doc.get("source"),
             has_metadata=True,
+            instructions_known="instructions" in doc,
         )
     return None
 

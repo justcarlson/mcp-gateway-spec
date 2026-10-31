@@ -54,10 +54,8 @@ class _Client:
             "Content-Type": "application/json",
             "Accept": "application/json, text/event-stream",
             "MCP-Protocol-Version": self.protocol,
+            **self.headers,
         }
-        # Header names are case-insensitive; a caller's header replaces a default.
-        given = {k.lower() for k in self.headers}
-        headers = {k: v for k, v in headers.items() if k.lower() not in given} | self.headers
         if self.stateless:
             headers["Mcp-Method"] = method
         if self.session:
@@ -151,8 +149,7 @@ def fetch_tools(
         value = os.environ.get(env)
         if value is None:
             raise InputError(f"environment variable {env} for header {header} is not set")
-        # --header-env wins over the token and User-Agent defaults, in any case.
-        headers = {k: v for k, v in headers.items() if k.lower() != header.lower()}
+        # urllib folds header case and keeps the last value, so this wins over the defaults above.
         headers[header] = value
     client = _Client(url, headers, timeout, protocol)
     if client.stateless:

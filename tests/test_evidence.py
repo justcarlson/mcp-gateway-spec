@@ -46,6 +46,18 @@ class Approval(unittest.TestCase):
         self.assertEqual(doc["not_checked"][0]["rules"], ["ANN-4"])
         self.assertEqual(doc["not_checked"][0]["count"], 1)
 
+    def test_unclassified_tool_without_approval_fails_ann4(self):
+        _, doc = check(app(tool("get_x", approval="none", annotations={})))
+        ann4 = [f["message"] for f in doc["findings"] if f["rule"] == "ANN-4"]
+        self.assertEqual(ann4, ["runs without approval but nothing classifies it as a read"])
+
+    def test_read_only_claim_on_a_mutation_is_desc8(self):
+        desc = "Read-only view of the light state, with its ID, name, and brightness fields."
+        _, doc = check(app(tool("get_light", readOnly=False, description=desc, annotations={})))
+        self.assertIn(
+            "classes it as a mutation", " ".join(f["message"] for f in doc["findings"] if f["rule"] == "DESC-8")
+        )
+
 
 class ReviewedKind(unittest.TestCase):
     def reviewed(self, **extra):
@@ -57,6 +69,23 @@ class ReviewedKind(unittest.TestCase):
         self.assertEqual([(f["rule"], f["severity"]) for f in ann], [("ANN-2", "info")])
         self.assertTrue(doc["conformance"]["level1"])
         self.assertEqual(code, 0)
+
+    def test_review_against_write_hints_warns(self):
+        reviewed = tool(
+            "get_records",
+            readOnly=True,
+            kindConfirmed=True,
+            approval="none",
+            annotations=WRITE | {"destructiveHint": True},
+        )
+        code, doc = check(app(reviewed))
+        ann = [(f["rule"], f["severity"]) for f in doc["findings"] if f["rule"].startswith("ANN")]
+        self.assertEqual(ann, [("ANN-2", "warning")])
+        self.assertEqual(code, 0)
+
+    def test_reviewed_read_without_approval_is_not_a_gap(self):
+        _, doc = check(app(tool("get_state", readOnly=True, kindConfirmed=True), instructions="Use it."))
+        self.assertEqual(doc["not_checked"], [])
 
     def test_unreviewed_hint_conflict_still_fails(self):
         code, doc = check(app(self.reviewed()))
@@ -78,6 +107,14 @@ class Instructions(unittest.TestCase):
         self.assertIn("not checked: DESC-11, DESC-12 for 1 groups (no instruction text); not a pass", text)
         self.assertIn("some checked rules had no data", text)
 
+    def test_spec_native_group_without_instructions_is_checked(self):
+        doc = {
+            "group": {"slug": "home", "description": "Smart home device state."},
+            "tools": [tool("get_state", approval="none")],
+        }
+        _, out = check(doc)
+        self.assertEqual(out["not_checked"], [])
+
     def test_instructions_present_are_checked(self):
         _, out = check(app(tool("get_state", approval="none"), instructions="Call get_state first."))
         self.assertEqual(out["not_checked"], [])
@@ -90,6 +127,10 @@ class PortalEdge(unittest.TestCase):
         flagged = sorted(f.tool for f in run_checks(inv) if f.rule == "NAME-8")
         self.assertEqual(flagged, ["search"])
         self.assertEqual([f.group for f in run_checks(inv) if f.rule == "NAME-8"], ["adapters"])
+
+    def test_single_meta_name_group_keeps_name8(self):
+        inv = build_inventory([("portal", {"tools": [tool("jira_search"), tool("get_x")]})], namespace="prefix")
+        self.assertEqual([f.group for f in run_checks(inv) if f.rule == "NAME-8"], ["jira"])
 
 
 class DiffWaivers(unittest.TestCase):
@@ -109,6 +150,34 @@ class DiffWaivers(unittest.TestCase):
         conf3 = [f["message"] for f in doc["findings"] if f["rule"] == "CONF-3"]
         self.assertEqual(len(conf3), 1, conf3)
         self.assertIn("EDGE-3", conf3[0])
+
+    def test_check_ignores_waivers_for_manual_and_live_only_rules(self):
+        body = "".join(
+            f'[[waiver]]\nrule = "{r}"\ntarget = "*"\nreason = "r"\nowner = "o"\nexpires = 2026-12-01\n'
+            for r in ("EDGE-1", "CHG-11")
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            (d / "w.toml").write_text(body, encoding="utf-8")
+            _, doc = run_json(
+                "check",
+                str(write_json(d, "t.json", {"tools": [tool("get_a")]})),
+                "--waivers",
+                str(d / "w.toml"),
+                "--today",
+                TODAY,
+            )
+        self.assertNotIn("CONF-3", rules_of(doc))
+
+
+class KindChange(unittest.TestCase):
+    def test_mutation_to_query_is_chg9(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            old = write_json(d, "old.json", {"tools": [tool("get_a", readOnly=False)]})
+            new = write_json(d, "new.json", {"tools": [tool("get_a", readOnly=True)]})
+            _, doc = run_json("diff", str(old), str(new))
+        self.assertIn("kind changed from mutation to query", [f["message"] for f in doc["findings"]])
 
 
 if __name__ == "__main__":

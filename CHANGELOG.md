@@ -8,10 +8,11 @@ Checker and profile fixes from a live check of a 38-app deployment and its edge.
 
 ### Fixed
 
-- The checker no longer reads Executor's `readOnly` field as the approval state. It is the tool's kind. Approval now comes only from an `approval` field (`"required"` or `"none"`); a tool without one has unknown approval. ANN-4 now fails a mutation that runs without approval, such as a tool under `never()`.
-- A tool with `kindConfirmed: true` and kind `query` counts as reviewed under ANN-3. Its upstream hints no longer give ANN-2 or ANN-4 errors; a hint conflict is an info finding for the server owner.
-- NAME-8 no longer flags a group whose tools are all meta-tools, such as a gateway behind an edge. It still flags a meta-tool name in an ordinary group.
-- `diff --mode sync --waivers` no longer reports CONF-3 "matched nothing" for waivers on rules that `diff` does not check. The same holds for `check` and the change rules.
+- The checker no longer reads Executor's `readOnly` field as the approval state. It is the tool's kind. Approval now comes only from an `approval` field (`"required"` or `"none"`); a tool without one has unknown approval. ANN-4 now fails a mutation that runs without approval, such as a tool under `never()`, and a tool with no classification that runs without approval.
+- A tool with `kindConfirmed: true` and kind `query` counts as reviewed under ANN-3. Its upstream hints no longer give ANN-2 or ANN-4 errors. Hints that say both read-only and destructive give an info finding for the server owner; hints that declare writes give a warning to confirm the review.
+- NAME-8 no longer flags a group of two or more tools that are all meta-tools, such as a gateway behind an edge. It still flags a meta-tool name in an ordinary group.
+- `diff --mode sync --waivers` no longer reports CONF-3 "matched nothing" for waivers on rules that `diff` does not check. `check` likewise ignores waivers for the change rules, manual rules, and CHG-11 on file input.
+- DESC-8 and CHG-9 read the tool kind, so a read-only claim on a mutation and a mutation-to-query change are still caught without `approval`.
 - Live checks send `User-Agent: mcp-gateway-check/<version>`. Requests without one got a 403 from Cloudflare's browser integrity check.
 
 ### Added

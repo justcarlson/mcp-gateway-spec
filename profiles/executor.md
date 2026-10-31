@@ -46,7 +46,7 @@ tool => tool.kind === "mutation" ? always() : undefined
 ```
 
 - Upstream hints are untrusted ([ANN-3]). Use `kinds` (second argument to `mcpRouter`) to mark the tools you reviewed as `"query"`, rather than relying on `readOnlyHint` alone.
-- `kinds` sets the tool's kind and `kindConfirmed: true`. It does not change `annotations`, which keep the upstream hints. The checker treats `kindConfirmed: true` with `readOnly: true` as the gateway's review under [ANN-3]: it raises no [ANN-2] error and no [ANN-4] for that tool, and notes an upstream hint conflict (for example `readOnlyHint` and `destructiveHint` both true) as info for the server owner.
+- `kinds` sets the tool's kind and `kindConfirmed: true`. It does not change `annotations`, which keep the upstream hints. The checker treats `kindConfirmed: true` with `readOnly: true` as the gateway's review under [ANN-3]: it raises no [ANN-2] error and no [ANN-4] for that tool. If upstream sets `readOnlyHint` and `destructiveHint` both true, the checker gives info for the server owner. If upstream hints declare writes, it gives a warning to confirm the review.
 - Every `never()` or custom exception is an [ANN-7] record: add a comment with the reason and reviewer.
 - `readOnly` in the admin tools response is the tool's **kind** (`true` for a query, `false` for a mutation), not its approval. Approval comes from app code, so an app that uses `never()` runs mutations without approval. The checker fails [ANN-4] for a tool whose dump says `readOnly: false` and `approval: "none"`.
 

@@ -221,7 +221,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "check":
             inv = _inventory(args.inputs, args)
             # Diff-only rules are not evaluated here, so a shared waiver file stays clean.
-            return _finish(inv, run_checks(inv), args, frozenset(RULES) - CHANGE_RULES - SYNC_RULES)
+            checked = {r.id for r in RULES.values() if r.checked} - CHANGE_RULES - SYNC_RULES
+            if not inv.live:
+                checked.discard("CHG-11")  # live-only
+            return _finish(inv, run_checks(inv), args, frozenset(checked))
         if args.command == "diff":
             old = _inventory([args.old], args)
             new = _inventory([args.new], args)

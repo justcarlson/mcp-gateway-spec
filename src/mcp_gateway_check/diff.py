@@ -132,6 +132,10 @@ def diff_change(old: Inventory, new: Inventory, aliases: dict[str, str]) -> list
             )
         if tool.approval == "required" and cur.approval == "none":
             out.append(finding("CHG-9", "approval changed from required to none", tool=cur, heuristic=True))
+        if tool.kind == "mutation" and cur.kind == "query":
+            out.append(finding("CHG-9", "kind changed from mutation to query", tool=cur, heuristic=True))
+        elif not tool.reviewed_read_only and cur.reviewed_read_only:
+            out.append(finding("CHG-9", "the gateway now reviews it as a read", tool=cur, heuristic=True))
         if _deprecated(cur) and not _deprecated(tool):
             out.append(
                 finding(

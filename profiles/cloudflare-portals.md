@@ -35,7 +35,7 @@ When the portal fronts a gateway such as [Executor](executor.md), expose only th
 - Give the portal its own gateway credential, scoped to a view built for the portal ([EDGE-4], [SEC-4]).
 - The portal must not approve calls on a person's behalf; approvals pause in the gateway and reach a person ([EDGE-7]).
 - Adapter tools follow this spec like any other tool, and a caller map lists the gateway paths each adapter calls ([EDGE-5], [CHG-8]).
-- The checker skips [NAME-8] for a server whose exposed tools are all meta-tools, since passing them through is the point. It still flags a meta-tool name inside an ordinary server, such as `adapters_search`.
+- The checker skips [NAME-8] for a server whose exposed tools are two or more meta-tools and nothing else, since passing them through is the point. It still flags a meta-tool name inside an ordinary server, such as `adapters_search`.
 - Adapter names like `<domain>_<verb>` (for example `media_request`) give [NAME-4] info findings. These are advice, not errors. To record the choice, waive them:
 
 ```toml
