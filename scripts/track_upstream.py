@@ -1,9 +1,11 @@
 """Compare upstream MCP releases with upstream.json and open one tracking issue per new revision.
 
 A new release candidate or final revision opens (or updates) one issue titled
-"Track MCP <rev>". The body links the release and the revision's changelog.mdx
-and lists its major changes. Nothing is merged or edited in the repo: a person
-follows docs/versioning.md.
+"Track MCP <rev>" with the label "mcp-upstream". The body links the release and
+the revision's changelog.mdx and lists its major changes. When the issue moves
+to a new upstream tag (an RC becomes final), the label is applied again, so the
+"labeled" webhook fires once per stage. This script never edits the repo; the
+agent in docs/upstream-agent.md does.
 
     GITHUB_TOKEN=... GITHUB_REPOSITORY=owner/repo python3 scripts/track_upstream.py
     python3 scripts/track_upstream.py --dry-run --releases-file r.json --changelog-dir dir/ --issues-file i.json
@@ -30,6 +32,7 @@ API = "https://api.github.com"
 _TAG = re.compile(r"^(\d{4}-\d{2}-\d{2})(-RC\d*)?$")
 _MARKER = "<!-- track-upstream {rev} {tag} -->"
 MAX_ITEMS = 12
+LABEL = "mcp-upstream"
 
 
 @dataclass
@@ -129,6 +132,7 @@ def issue_body(own_repo: str, upstream_repo: str, rel: Release, items: list[str]
         "",
         f"- Release: {rel.url}",
         f"- Changelog: {changelog}",
+        f"- Agent: the `{LABEL}` label starts the [upstream agent](https://github.com/{own_repo}/blob/main/docs/upstream-agent.md)",
         "",
         "## Major changes (from the changelog)",
         "",
@@ -172,8 +176,27 @@ def plan(
         existing = next((i for i in issues if i.get("title") == title and "pull_request" not in i), None)
         if existing is None:
             actions.append({"action": "create", "title": title, "body": body})
-        elif existing.get("body") != body:
-            actions.append({"action": "update", "number": existing["number"], "title": title, "body": body})
+            continue
+        labeled = any(label.get("name") == LABEL for label in existing.get("labels") or [])
+        new_tag = _MARKER.format(rev=rel.rev, tag=rel.tag) not in (existing.get("body") or "")
+        reopen = existing.get("state", "open") != "open"
+        if reopen and not new_tag:
+            continue  # a maintainer closed it at this stage; leave it closed
+        new_body = existing.get("body") != body
+        # Relabel on a new upstream tag, and repair a label that an earlier failed run left off.
+        relabel = new_tag or not labeled
+        if new_body or relabel:
+            actions.append(
+                {
+                    "action": "update",
+                    "number": existing["number"],
+                    "title": title,
+                    "body": body if new_body else None,
+                    "labeled": labeled,
+                    "relabel": relabel,
+                    "reopen": reopen,
+                }
+            )
     return actions
 
 
@@ -183,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="print actions; change nothing")
     ap.add_argument("--releases-file", type=Path, help="read upstream releases from this JSON file")
     ap.add_argument("--changelog-dir", type=Path, help="read <rev>.mdx changelogs from this directory")
-    ap.add_argument("--issues-file", type=Path, help="read this repo's open issues from this JSON file")
+    ap.add_argument("--issues-file", type=Path, help="read this repo's tracking issues from this JSON file")
     args = ap.parse_args(argv)
 
     upstream = json.loads(args.upstream.read_text(encoding="utf-8"))
@@ -202,7 +225,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.dry_run and not gh.token:
         issues = []
     else:
-        issues = gh.request("GET", f"/repos/{own_repo}/issues?state=open&per_page=100")
+        # Closed issues too, so a closed tracking issue is not opened again. Only the bot's issues.
+        issues = gh.request("GET", f"/repos/{own_repo}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100")
 
     def changelog(rel: Release) -> str:
         if args.changelog_dir:
@@ -222,14 +246,35 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     for act in actions:
         verb = {"create": "create", "update": f"update #{act.get('number')}"}[act["action"]]
-        print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}")
+        relabel = (" and reopen" if act.get("reopen") else "") + (
+            f" and re-apply {LABEL!r}" if act.get("relabel") else ""
+        )
+        print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}{relabel}")
         if args.dry_run:
-            print(act["body"])
+            if act["body"] is not None:
+                print(act["body"])
             continue
         if act["action"] == "create":
-            gh.request("POST", f"/repos/{own_repo}/issues", {"title": act["title"], "body": act["body"]})
-        else:
-            gh.request("PATCH", f"/repos/{own_repo}/issues/{act['number']}", {"body": act["body"]})
+            gh.request(
+                "POST", f"/repos/{own_repo}/issues", {"title": act["title"], "body": act["body"], "labels": [LABEL]}
+            )
+            continue
+        # Order: remove the label, update the body, add the label. If a step fails,
+        # the next run sees a new tag or a missing label and finishes the job.
+        number = act["number"]
+        if act["relabel"] and act["labeled"]:
+            try:
+                gh.request("DELETE", f"/repos/{own_repo}/issues/{number}/labels/{LABEL}")
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:  # 404: the label is already off
+                    raise
+        fields = {"body": act["body"]} if act["body"] is not None else {}
+        if act["reopen"]:
+            fields["state"] = "open"
+        if fields:
+            gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", fields)
+        if act["relabel"]:
+            gh.request("POST", f"/repos/{own_repo}/issues/{number}/labels", {"labels": [LABEL]})
     return 0
 
 

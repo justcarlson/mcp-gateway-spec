@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from mcp_gateway_check import revisions
 from mcp_gateway_check.model import InputError
@@ -205,11 +206,85 @@ class Tracking(unittest.TestCase):
         self.assertNotIn("Not part of the summary", act["body"])
         self.assertIn("draft PR", act["body"])
 
+    def issue(self, body, labeled=True, state="open"):
+        labels = [{"name": track.LABEL}] if labeled else []
+        return {"number": 7, "title": "Track MCP 2027-01-26", "body": body, "labels": labels, "state": state}
+
     def test_existing_issue_is_updated_not_duplicated(self):
         body = self.plan([])[0]["body"]
-        self.assertEqual(self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": body}]), [])
-        actions = self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": "old"}])
+        self.assertEqual(self.plan([self.issue(body)]), [])
+        actions = self.plan([self.issue("old")])
         self.assertEqual([(a["action"], a["number"]) for a in actions], [("update", 7)])
+
+    def test_closed_issue_is_left_alone_at_the_same_tag(self):
+        body = self.plan([])[0]["body"]
+        self.assertEqual(self.plan([self.issue(body, labeled=False, state="closed")]), [])
+
+    def test_closed_issue_is_reopened_on_a_new_tag(self):
+        body = self.plan([])[0]["body"].replace("-RC -->", "-RC0 -->")
+        calls = self.run_live([self.issue(body, labeled=False, state="closed")])
+        self.assertEqual([(m, p) for m, p, _ in calls], [("PATCH", ["issues", "7"]), ("POST", ["7", "labels"])])
+        self.assertEqual(calls[0][2]["state"], "open")
+
+    def test_relabel_on_a_new_upstream_tag_or_a_missing_label(self):
+        body = self.plan([])[0]["body"]
+        self.assertIn(f"`{track.LABEL}` label starts the [upstream agent]", body)
+        edited = body.replace("Add the `example/ping` method.", "Reworded upstream.")
+        self.assertEqual([a["relabel"] for a in self.plan([self.issue(edited)])], [False])
+        old_tag = body.replace("2027-01-26-RC -->", "2027-01-26-RC0 -->")
+        self.assertEqual([a["relabel"] for a in self.plan([self.issue(old_tag)])], [True])
+        repair = self.plan([self.issue(body, labeled=False)])
+        self.assertEqual([(a["relabel"], a["body"]) for a in repair], [(True, None)])
+
+    def run_live(self, issues, fail=None):
+        """Run main() against a fake GitHub. Returns (method, last path parts) per call."""
+        calls = []
+
+        class FakeGitHub:
+            token = "t"
+
+            def __init__(self, token):
+                pass
+
+            def request(self, method, path, body=None, raw=False):
+                calls.append((method, path.rsplit("/", 2)[-2:], body))
+                if method == fail:
+                    raise track.urllib.error.HTTPError(path, 500, "Server Error", None, io.BytesIO())
+                return []
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "issues.json"
+            path.write_text(json.dumps(issues), encoding="utf-8")
+            args = ["--releases-file", str(self.FIXTURES / "releases.json"), "--changelog-dir", str(self.FIXTURES)]
+            with mock.patch.object(track, "GitHub", FakeGitHub), contextlib.redirect_stdout(io.StringIO()):
+                if fail:
+                    with self.assertRaises(track.urllib.error.HTTPError) as caught:
+                        track.main(args + ["--issues-file", str(path)])
+                    caught.exception.close()
+                else:
+                    self.assertEqual(track.main(args + ["--issues-file", str(path)]), 0)
+        return calls
+
+    def test_live_run_labels_new_issues(self):
+        calls = self.run_live([])
+        self.assertEqual([(m, b["labels"]) for m, _, b in calls], [("POST", [track.LABEL])])
+
+    def test_live_run_relabels_on_new_tag_in_a_safe_order(self):
+        body = self.plan([])[0]["body"]
+        stale = [self.issue(body.replace("-RC -->", "-RC0 -->"))]
+        self.assertEqual(
+            [(m, p) for m, p, _ in self.run_live(stale)],
+            [("DELETE", ["labels", track.LABEL]), ("PATCH", ["issues", "7"]), ("POST", ["7", "labels"])],
+        )
+
+    def test_failed_label_add_is_repaired_on_the_next_run(self):
+        body = self.plan([])[0]["body"]
+        stale = body.replace("-RC -->", "-RC0 -->")
+        calls = self.run_live([self.issue(stale)], fail="POST")
+        # The label removal and the body update went through; the label add did not.
+        patched = next(b["body"] for m, _, b in calls if m == "PATCH")
+        after_failure = [self.issue(patched, labeled=False)]
+        self.assertEqual([(m, p) for m, p, _ in self.run_live(after_failure)], [("POST", ["7", "labels"])])
 
     def test_final_beats_rc_and_known_releases_are_ignored(self):
         final = track.Release("2027-01-26", "2027-01-26", False, "https://example.test/final", "2027-01-26T00:00:00Z")
