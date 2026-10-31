@@ -177,10 +177,11 @@ def plan(
         if existing is None:
             actions.append({"action": "create", "title": title, "body": body})
             continue
-        if existing.get("state", "open") != "open":
-            continue  # a maintainer closed it; do not reopen it or start the agent again
         labeled = any(label.get("name") == LABEL for label in existing.get("labels") or [])
         new_tag = _MARKER.format(rev=rel.rev, tag=rel.tag) not in (existing.get("body") or "")
+        reopen = existing.get("state", "open") != "open"
+        if reopen and not new_tag:
+            continue  # a maintainer closed it at this stage; leave it closed
         new_body = existing.get("body") != body
         # Relabel on a new upstream tag, and repair a label that an earlier failed run left off.
         relabel = new_tag or not labeled
@@ -193,6 +194,7 @@ def plan(
                     "body": body if new_body else None,
                     "labeled": labeled,
                     "relabel": relabel,
+                    "reopen": reopen,
                 }
             )
     return actions
@@ -244,7 +246,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     for act in actions:
         verb = {"create": "create", "update": f"update #{act.get('number')}"}[act["action"]]
-        relabel = f" and re-apply {LABEL!r}" if act.get("relabel") else ""
+        relabel = (" and reopen" if act.get("reopen") else "") + (
+            f" and re-apply {LABEL!r}" if act.get("relabel") else ""
+        )
         print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}{relabel}")
         if args.dry_run:
             if act["body"] is not None:
@@ -264,8 +268,11 @@ def main(argv: list[str] | None = None) -> int:
             except urllib.error.HTTPError as exc:
                 if exc.code != 404:  # 404: the label is already off
                     raise
-        if act["body"] is not None:
-            gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", {"body": act["body"]})
+        fields = {"body": act["body"]} if act["body"] is not None else {}
+        if act["reopen"]:
+            fields["state"] = "open"
+        if fields:
+            gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", fields)
         if act["relabel"]:
             gh.request("POST", f"/repos/{own_repo}/issues/{number}/labels", {"labels": [LABEL]})
     return 0

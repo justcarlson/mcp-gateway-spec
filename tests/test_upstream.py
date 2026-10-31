@@ -216,8 +216,15 @@ class Tracking(unittest.TestCase):
         actions = self.plan([self.issue("old")])
         self.assertEqual([(a["action"], a["number"]) for a in actions], [("update", 7)])
 
-    def test_closed_issue_is_left_alone(self):
-        self.assertEqual(self.plan([self.issue("old", labeled=False, state="closed")]), [])
+    def test_closed_issue_is_left_alone_at_the_same_tag(self):
+        body = self.plan([])[0]["body"]
+        self.assertEqual(self.plan([self.issue(body, labeled=False, state="closed")]), [])
+
+    def test_closed_issue_is_reopened_on_a_new_tag(self):
+        body = self.plan([])[0]["body"].replace("-RC -->", "-RC0 -->")
+        calls = self.run_live([self.issue(body, labeled=False, state="closed")])
+        self.assertEqual([(m, p) for m, p, _ in calls], [("PATCH", ["issues", "7"]), ("POST", ["7", "labels"])])
+        self.assertEqual(calls[0][2]["state"], "open")
 
     def test_relabel_on_a_new_upstream_tag_or_a_missing_label(self):
         body = self.plan([])[0]["body"]

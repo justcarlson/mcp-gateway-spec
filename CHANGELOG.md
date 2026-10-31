@@ -12,7 +12,7 @@ All notable changes to this spec and its checker. The format follows [Keep a Cha
 ### Changed
 
 - The upstream tracking workflow runs daily instead of weekly, one run at a time.
-- `scripts/track_upstream.py` reads closed tracking issues too and never opens one again.
+- `scripts/track_upstream.py` reads closed tracking issues too. It reopens one only when upstream ships a new tag for it.
 
 ## [0.1.1] - 2026-10-30
 
