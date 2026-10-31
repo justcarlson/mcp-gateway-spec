@@ -149,7 +149,7 @@ To add yours, follow [CONTRIBUTING.md](CONTRIBUTING.md#add-a-profile). A profile
 
 ## Compatibility
 
-The spec version and the MCP revision are separate. [upstream.json](upstream.json) pins each MCP revision by tag and commit, and a weekly workflow opens an issue when upstream ships a new one. See [docs/versioning.md](docs/versioning.md).
+The spec version and the MCP revision are separate. [upstream.json](upstream.json) pins each MCP revision by tag and commit, and a daily workflow opens an issue when upstream ships a new one. The issue starts an [agent](docs/upstream-agent.md) that does the update. See [docs/versioning.md](docs/versioning.md).
 
 | Spec version | MCP revisions | Conformance profiles |
 |---|---|---|

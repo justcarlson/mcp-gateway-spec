@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from mcp_gateway_check import revisions
 from mcp_gateway_check.model import InputError
@@ -210,6 +211,53 @@ class Tracking(unittest.TestCase):
         self.assertEqual(self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": body}]), [])
         actions = self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": "old"}])
         self.assertEqual([(a["action"], a["number"]) for a in actions], [("update", 7)])
+
+    def test_relabel_only_on_a_new_upstream_tag(self):
+        body = self.plan([])[0]["body"]
+        self.assertIn(f"`{track.LABEL}` label starts the [upstream agent]", body)
+        edited = body.replace("Add the `example/ping` method.", "Reworded upstream.")
+        same_tag = self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": edited}])
+        self.assertEqual([a["relabel"] for a in same_tag], [False])
+        old_tag = body.replace("2027-01-26-RC -->", "2027-01-26-RC0 -->")
+        new_tag = self.plan([{"number": 7, "title": "Track MCP 2027-01-26", "body": old_tag}])
+        self.assertEqual([a["relabel"] for a in new_tag], [True])
+
+    def test_live_run_labels_new_issues_and_relabels_on_new_tag(self):
+        calls = []
+
+        class FakeGitHub:
+            token = "t"
+
+            def __init__(self, token):
+                pass
+
+            def request(self, method, path, body=None, raw=False):
+                calls.append((method, path, body))
+                if path.endswith("/labels/" + track.LABEL):
+                    raise track.urllib.error.HTTPError(path, 404, "Not Found", None, None)
+                return []
+
+        def run(issues):
+            calls.clear()
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "issues.json"
+                path.write_text(json.dumps(issues), encoding="utf-8")
+                args = ["--releases-file", str(self.FIXTURES / "releases.json"), "--changelog-dir", str(self.FIXTURES)]
+                with mock.patch.object(track, "GitHub", FakeGitHub), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(track.main(args + ["--issues-file", str(path)]), 0)
+            return [(m, p.rsplit("/", 2)[-2:], b) for m, p, b in calls]
+
+        created = run([])
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0][0], "POST")
+        self.assertEqual(created[0][2]["labels"], [track.LABEL])
+
+        body = self.plan([])[0]["body"]
+        stale = [{"number": 7, "title": "Track MCP 2027-01-26", "body": body.replace("-RC -->", "-RC0 -->")}]
+        self.assertEqual(
+            [(m, p) for m, p, _ in run(stale)],
+            [("PATCH", ["issues", "7"]), ("DELETE", ["labels", track.LABEL]), ("POST", ["7", "labels"])],
+        )
 
     def test_final_beats_rc_and_known_releases_are_ignored(self):
         final = track.Release("2027-01-26", "2027-01-26", False, "https://example.test/final", "2027-01-26T00:00:00Z")

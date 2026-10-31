@@ -2,6 +2,17 @@
 
 All notable changes to this spec and its checker. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [SemVer](https://semver.org/) as described in [docs/versioning.md](docs/versioning.md).
 
+## [Unreleased]
+
+### Added
+
+- [docs/upstream-agent.md](docs/upstream-agent.md): a runbook for an agent that updates the repo for a new MCP revision, and the T3 Code webhook task and GitHub webhook that start it.
+- `scripts/track_upstream.py` labels tracking issues `mcp-upstream`. When an issue moves to a new upstream tag, such as RC to final, it applies the label again so the webhook fires once per stage.
+
+### Changed
+
+- The upstream tracking workflow runs daily instead of weekly.
+
 ## [0.1.1] - 2026-10-30
 
 Checker and profile fixes from a live check of a 38-app deployment and its edge. No rule changes; the conformance profiles stay as frozen in 0.1.0.

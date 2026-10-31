@@ -1,9 +1,11 @@
 """Compare upstream MCP releases with upstream.json and open one tracking issue per new revision.
 
 A new release candidate or final revision opens (or updates) one issue titled
-"Track MCP <rev>". The body links the release and the revision's changelog.mdx
-and lists its major changes. Nothing is merged or edited in the repo: a person
-follows docs/versioning.md.
+"Track MCP <rev>" with the label "mcp-upstream". The body links the release and
+the revision's changelog.mdx and lists its major changes. When the issue moves
+to a new upstream tag (an RC becomes final), the label is applied again, so the
+"labeled" webhook fires once per stage. This script never edits the repo; the
+agent in docs/upstream-agent.md does.
 
     GITHUB_TOKEN=... GITHUB_REPOSITORY=owner/repo python3 scripts/track_upstream.py
     python3 scripts/track_upstream.py --dry-run --releases-file r.json --changelog-dir dir/ --issues-file i.json
@@ -30,6 +32,7 @@ API = "https://api.github.com"
 _TAG = re.compile(r"^(\d{4}-\d{2}-\d{2})(-RC\d*)?$")
 _MARKER = "<!-- track-upstream {rev} {tag} -->"
 MAX_ITEMS = 12
+LABEL = "mcp-upstream"
 
 
 @dataclass
@@ -129,6 +132,7 @@ def issue_body(own_repo: str, upstream_repo: str, rel: Release, items: list[str]
         "",
         f"- Release: {rel.url}",
         f"- Changelog: {changelog}",
+        f"- Agent: the `{LABEL}` label starts the [upstream agent](https://github.com/{own_repo}/blob/main/docs/upstream-agent.md)",
         "",
         "## Major changes (from the changelog)",
         "",
@@ -173,7 +177,11 @@ def plan(
         if existing is None:
             actions.append({"action": "create", "title": title, "body": body})
         elif existing.get("body") != body:
-            actions.append({"action": "update", "number": existing["number"], "title": title, "body": body})
+            marker = _MARKER.format(rev=rel.rev, tag=rel.tag)
+            relabel = marker not in (existing.get("body") or "")  # new upstream tag, not a text edit
+            actions.append(
+                {"action": "update", "number": existing["number"], "title": title, "body": body, "relabel": relabel}
+            )
     return actions
 
 
@@ -222,14 +230,25 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     for act in actions:
         verb = {"create": "create", "update": f"update #{act.get('number')}"}[act["action"]]
-        print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}")
+        relabel = f" and re-apply {LABEL!r}" if act.get("relabel") else ""
+        print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}{relabel}")
         if args.dry_run:
             print(act["body"])
             continue
         if act["action"] == "create":
-            gh.request("POST", f"/repos/{own_repo}/issues", {"title": act["title"], "body": act["body"]})
-        else:
-            gh.request("PATCH", f"/repos/{own_repo}/issues/{act['number']}", {"body": act["body"]})
+            gh.request(
+                "POST", f"/repos/{own_repo}/issues", {"title": act["title"], "body": act["body"], "labels": [LABEL]}
+            )
+            continue
+        number = act["number"]
+        gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", {"body": act["body"]})
+        if act["relabel"]:
+            try:
+                gh.request("DELETE", f"/repos/{own_repo}/issues/{number}/labels/{LABEL}")
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:  # 404: the label was not on the issue
+                    raise
+            gh.request("POST", f"/repos/{own_repo}/issues/{number}/labels", {"labels": [LABEL]})
     return 0
 
 

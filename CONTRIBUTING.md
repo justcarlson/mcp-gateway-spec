@@ -56,7 +56,7 @@ Do not write that a product "conforms". Conformance belongs to a specific view, 
 
 ## MCP revisions
 
-Do not edit `upstream.json` by hand for a new revision without a tracking issue. The weekly workflow opens one. Follow [docs/versioning.md](docs/versioning.md#release-policy).
+Do not edit `upstream.json` by hand for a new revision without a tracking issue. The daily workflow opens one. Follow [docs/versioning.md](docs/versioning.md#release-policy).
 
 ## Commit and pull request
 

@@ -42,7 +42,9 @@ The checker skips rules outside the window and lists them in the report. It reje
 
 ## Tracking upstream
 
-[`.github/workflows/track-upstream.yml`](../.github/workflows/track-upstream.yml) runs every Monday and on demand. It compares upstream releases, including RC tags, with `upstream.json`. For each new release candidate or final revision it opens or updates one issue titled `Track MCP <rev>`, with the release link, the `docs/specification/<rev>/changelog.mdx` link, and a summary of its major changes. It never edits the repo or merges anything. It uses the workflow's `GITHUB_TOKEN` with `contents: read` and `issues: write` only.
+[`.github/workflows/track-upstream.yml`](../.github/workflows/track-upstream.yml) runs every day and on demand. It compares upstream releases, including RC tags, with `upstream.json`. For each new release candidate or final revision it opens or updates one issue titled `Track MCP <rev>`, labeled `mcp-upstream`, with the release link, the `docs/specification/<rev>/changelog.mdx` link, and a summary of its major changes. The workflow never edits the repo or merges anything. It uses the workflow's `GITHUB_TOKEN` with `contents: read` and `issues: write` only.
+
+The label starts the [upstream agent](upstream-agent.md) through a webhook. The agent opens the PR: a draft for an RC, and a PR it merges for a final revision unless the change is **Breaking**.
 
 Run it locally without changing anything:
 
