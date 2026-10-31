@@ -56,6 +56,7 @@ _RULES = [
     Rule("NAME-8", "SHOULD NOT", "Tool names reuse a meta-tool name", True),
     Rule("NAME-9", "SHOULD", "Tool names are specific and easy to tell apart"),
     Rule("NAME-10", "SHOULD", "Tools have a human-readable title", True),
+    Rule("NAME-11", "SHOULD NOT", "Tool names start with an upstream API version such as v1_", True),
     # Grouping
     Rule("GRP-1", "MUST", "Every tool belongs to exactly one group with one owner"),
     Rule("GRP-2", "MUST", "Group slugs match ^[a-z][a-z0-9]{1,19}$", True),
@@ -121,6 +122,9 @@ _RULES = [
         "The initialize result returns the view's instructions, the same in every session",
         until=FIRST,
     ),
+    Rule("DISC-12", "SHOULD", "A meta-tool-only view states its capabilities in search and instructions"),
+    Rule("DISC-13", "SHOULD", "Tools that are usually chained name the follow-up tool"),
+    Rule("DISC-14", "SHOULD", "A view has one entry tool or routing skill for URL tasks"),
     # Views, scoping, identity
     Rule("VIEW-1", "MUST", "A URL or a credential selects the view", since=STATELESS),
     Rule("VIEW-2", "MUST", "View policy filters list, search, describe, call, and execute"),

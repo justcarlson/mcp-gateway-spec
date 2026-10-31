@@ -20,7 +20,7 @@ Copy into the pull request for any change to tools, groups, descriptions, approv
 - [ ] Each new group follows the [group template](group.md)
 - [ ] Group has 10 tools or fewer, or a filter or split plan (GRP-4)
 - [ ] Names specific and distinguishable from the rest of the view (NAME-9)
-- [ ] One tool per user goal; fixed call sequences merged (GRP-7)
+- [ ] One tool per user goal; fixed call sequences merged (GRP-7); usual follow-up tools named in the description (DISC-13)
 - [ ] Minimal required inputs; defaults set (SCHEMA-6)
 - [ ] Structured results have `outputSchema` and text (SCHEMA-8)
 - [ ] Large results paginate or truncate with a hint (SCHEMA-9)

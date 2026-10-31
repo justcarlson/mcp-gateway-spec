@@ -29,6 +29,7 @@ MCP_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,128}$")
 SNAKE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 SLUG = re.compile(r"^[a-z][a-z0-9]{1,19}$")  # ADR-0003
+API_VERSION = re.compile(r"^v\d+(?:(?:alpha|beta)\d*)?$")  # NAME-11: v1, v2beta, v1alpha2
 HINTS = ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
 
 READ_VERBS = frozenset(
@@ -404,7 +405,13 @@ def _naming(inv: Inventory, tool: Tool) -> Iterator[Finding]:
     for seg in segments[:-1]:
         if not IDENT.match(seg):
             yield finding("NAME-3", f"namespace segment {seg!r} is not an identifier", tool=tool)
+    versioned = [seg for seg in segments if (w := words(seg)) and API_VERSION.match(w[0])]
+    if versioned:
+        shown = ", ".join(repr(s) for s in versioned)
+        yield finding("NAME-11", f"{shown} starts with an upstream API version", tool=tool)
     leaf_words = words(tool.leaf)
+    if leaf_words and API_VERSION.match(leaf_words[0]):
+        leaf_words = leaf_words[1:]  # NAME-11 reports it; judge the rest of the name on its own
     if tool.group:
         # Compare without separators so "pi_hole_get_stats" matches slug "pihole" or "pi-hole".
         slug_joined = "".join(words(tool.group))

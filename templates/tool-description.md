@@ -46,10 +46,11 @@ Keep the whole description between 80 and 1,024 characters.
 
 ## Review
 
-- [ ] Name: snake_case, verb first, no slug, no meta-tool name, 32 characters or fewer (NAME-3, NAME-4, NAME-6, NAME-7, NAME-8)
+- [ ] Name: snake_case, verb first, no slug, no meta-tool name, no API version prefix, 32 characters or fewer (NAME-3, NAME-4, NAME-6, NAME-7, NAME-8, NAME-11)
 - [ ] Title set (NAME-10)
 - [ ] First sentence says what, in 160 characters or fewer (DESC-4)
 - [ ] When to use, and the alternative when tools overlap (DESC-5)
+- [ ] Names the usual follow-up tool, if there is one (DISC-13)
 - [ ] Inputs and returns described; example for complex inputs (DESC-6)
 - [ ] No hidden directives, secrets, or private hosts (DESC-7)
 - [ ] No safety claims the gateway does not enforce (DESC-8)
