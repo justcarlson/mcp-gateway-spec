@@ -7,11 +7,12 @@ All notable changes to this spec and its checker. The format follows [Keep a Cha
 ### Added
 
 - [docs/upstream-agent.md](docs/upstream-agent.md): a runbook for an agent that updates the repo for a new MCP revision, and the T3 Code webhook task and GitHub webhook that start it.
-- `scripts/track_upstream.py` labels tracking issues `mcp-upstream`. When an issue moves to a new upstream tag, such as RC to final, it applies the label again so the webhook fires once per stage.
+- `scripts/track_upstream.py` labels tracking issues `mcp-upstream`. When an issue moves to a new upstream tag, such as RC to final, it applies the label again so the webhook fires once per stage. A run after a failed label call adds the missing label.
 
 ### Changed
 
-- The upstream tracking workflow runs daily instead of weekly.
+- The upstream tracking workflow runs daily instead of weekly, one run at a time.
+- `scripts/track_upstream.py` reads closed tracking issues too and never opens one again.
 
 ## [0.1.1] - 2026-10-30
 

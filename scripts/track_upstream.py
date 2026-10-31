@@ -176,11 +176,24 @@ def plan(
         existing = next((i for i in issues if i.get("title") == title and "pull_request" not in i), None)
         if existing is None:
             actions.append({"action": "create", "title": title, "body": body})
-        elif existing.get("body") != body:
-            marker = _MARKER.format(rev=rel.rev, tag=rel.tag)
-            relabel = marker not in (existing.get("body") or "")  # new upstream tag, not a text edit
+            continue
+        if existing.get("state", "open") != "open":
+            continue  # a maintainer closed it; do not reopen it or start the agent again
+        labeled = any(label.get("name") == LABEL for label in existing.get("labels") or [])
+        new_tag = _MARKER.format(rev=rel.rev, tag=rel.tag) not in (existing.get("body") or "")
+        new_body = existing.get("body") != body
+        # Relabel on a new upstream tag, and repair a label that an earlier failed run left off.
+        relabel = new_tag or not labeled
+        if new_body or relabel:
             actions.append(
-                {"action": "update", "number": existing["number"], "title": title, "body": body, "relabel": relabel}
+                {
+                    "action": "update",
+                    "number": existing["number"],
+                    "title": title,
+                    "body": body if new_body else None,
+                    "labeled": labeled,
+                    "relabel": relabel,
+                }
             )
     return actions
 
@@ -191,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dry-run", action="store_true", help="print actions; change nothing")
     ap.add_argument("--releases-file", type=Path, help="read upstream releases from this JSON file")
     ap.add_argument("--changelog-dir", type=Path, help="read <rev>.mdx changelogs from this directory")
-    ap.add_argument("--issues-file", type=Path, help="read this repo's open issues from this JSON file")
+    ap.add_argument("--issues-file", type=Path, help="read this repo's tracking issues from this JSON file")
     args = ap.parse_args(argv)
 
     upstream = json.loads(args.upstream.read_text(encoding="utf-8"))
@@ -210,7 +223,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.dry_run and not gh.token:
         issues = []
     else:
-        issues = gh.request("GET", f"/repos/{own_repo}/issues?state=open&per_page=100")
+        # Closed issues too, so a closed tracking issue is not opened again. Only the bot's issues.
+        issues = gh.request("GET", f"/repos/{own_repo}/issues?state=all&creator=github-actions%5Bbot%5D&per_page=100")
 
     def changelog(rel: Release) -> str:
         if args.changelog_dir:
@@ -233,21 +247,26 @@ def main(argv: list[str] | None = None) -> int:
         relabel = f" and re-apply {LABEL!r}" if act.get("relabel") else ""
         print(f"{'would ' if args.dry_run else ''}{verb} issue {act['title']!r}{relabel}")
         if args.dry_run:
-            print(act["body"])
+            if act["body"] is not None:
+                print(act["body"])
             continue
         if act["action"] == "create":
             gh.request(
                 "POST", f"/repos/{own_repo}/issues", {"title": act["title"], "body": act["body"], "labels": [LABEL]}
             )
             continue
+        # Order: remove the label, update the body, add the label. If a step fails,
+        # the next run sees a new tag or a missing label and finishes the job.
         number = act["number"]
-        gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", {"body": act["body"]})
-        if act["relabel"]:
+        if act["relabel"] and act["labeled"]:
             try:
                 gh.request("DELETE", f"/repos/{own_repo}/issues/{number}/labels/{LABEL}")
             except urllib.error.HTTPError as exc:
-                if exc.code != 404:  # 404: the label was not on the issue
+                if exc.code != 404:  # 404: the label is already off
                     raise
+        if act["body"] is not None:
+            gh.request("PATCH", f"/repos/{own_repo}/issues/{number}", {"body": act["body"]})
+        if act["relabel"]:
             gh.request("POST", f"/repos/{own_repo}/issues/{number}/labels", {"labels": [LABEL]})
     return 0
 
