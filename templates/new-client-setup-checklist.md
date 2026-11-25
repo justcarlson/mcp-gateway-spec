@@ -42,6 +42,7 @@ Use when a new client, agent, or audience needs gateway access. The goal: one vi
 
 - [ ] Lethal trifecta: private data ☐ untrusted content ☐ outbound ☐. All three: approval on every outbound tool, or split the view (SEC-1)
 - [ ] Cross-app review of the group combination (SEC-2)
+- [ ] Untrusted content screened for prompt injection server-side, or the owner's risk acceptance recorded (SEC-7)
 - [ ] Approval policy confirmed for every write tool in the view (ANN-4, ANN-5)
 - [ ] Policy fails closed: test with a wrong credential and expect no tools (VIEW-4)
 
