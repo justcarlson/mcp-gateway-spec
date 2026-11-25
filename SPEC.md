@@ -592,6 +592,18 @@ Annotations are hints. MCP says clients must treat them as untrusted unless the 
 **SHOULD** · manual · MCP 2025-11-25+ · Automation and people use separate views and credentials.
 *Why:* unattended agents need narrower access and separate audit trails. *Source:* [S61].
 
+#### SEC-7
+**MUST** · manual · MCP 2025-11-25+ · A view that serves untrusted third-party content (mail, calendar invites, shared documents, web pages) screens that content for prompt injection before the model reads it. Screening runs server-side, outside the model and the client, and blocks on a hit. Use the upstream vendor's managed screening, such as Google Cloud Model Armor floor settings for `GOOGLE_MCP_SERVER` with `INSPECT_AND_BLOCK` and prompt and response payload logging off. Or run a documented, self-owned screening step and record the owner's written acceptance of its residual risk.
+*Why:* approvals cannot stop an injected instruction that the model only reads; a filter in the path can. *Source:* [S67], [S54].
+
+#### SEC-8
+**MUST NOT** · manual · MCP 2025-11-25+ · An AI agent reads a local or self-hosted mirror of data that a screened upstream serves (a calendar sync JSON file, an `rclone` mount of a drive, an exported mailbox) to avoid the managed endpoint. Mirrors may feed deterministic, non-AI jobs. A mirror an agent must read needs a [waiver](#conf-2) and the same screening as SEC-7.
+*Why:* a mirror launders content past the screening, the approvals, and the vendor's usage terms. *Source:* [S67], [S68].
+
+#### SEC-9
+**SHOULD** · manual · MCP 2025-11-25+ · Data from a vendor's managed endpoint stays inside the vendor's retention limits. Provider-restricted technical data is kept at most 30 days (the cap at the time of writing; check the current terms). Redact it at session level before it reaches transcripts, memory, logs, or caches, and treat any store it reaches as tainted.
+*Why:* derived copies outlive the session and break the vendor's limits unseen. *Source:* [S68], [S56].
+
 ## 16. Conformance
 
 A gateway, view, or edge conforms at one of three levels. Claims are per view.
@@ -750,6 +762,9 @@ Generated from the checker's registry; a test keeps the two in step. *MCP until*
 | [SEC-4](#sec-4) | MUST NOT | manual | 2025-11-25 |  | The gateway passes client tokens to upstreams |
 | [SEC-5](#sec-5) | MUST | manual | 2025-11-25 |  | Upstream credentials are least-privilege; shared ones are recorded |
 | [SEC-6](#sec-6) | SHOULD | manual | 2025-11-25 |  | Automation and people use separate views |
+| [SEC-7](#sec-7) | MUST | manual | 2025-11-25 |  | Untrusted content is screened for prompt injection server-side |
+| [SEC-8](#sec-8) | MUST NOT | manual | 2025-11-25 |  | AI agents read local mirrors of screened upstream data |
+| [SEC-9](#sec-9) | SHOULD | manual | 2025-11-25 |  | Vendor data stays within retention limits and is redacted per session |
 | [CONF-1](#conf-1) | MUST | manual | 2025-11-25 |  | Conformance claims name the spec version, level, and evidence |
 | [CONF-2](#conf-2) | MUST | checked | 2025-11-25 |  | Waivers name a rule, target, reason, owner, and expiry |
 | [CONF-3](#conf-3) | SHOULD | checked | 2025-11-25 |  | Unused and expired waivers are removed |
@@ -824,6 +839,8 @@ Numbers S1-S34 follow [research/02-standards-guidance.md](research/02-standards-
 [S64]: https://www.rfc-editor.org/rfc/rfc2119 "RFC 2119"
 [S65]: https://www.rfc-editor.org/rfc/rfc8174 "RFC 8174"
 [S66]: https://semver.org/spec/v2.0.0.html "Semantic Versioning 2.0.0"
+[S67]: https://docs.cloud.google.com/model-armor/model-armor-mcp-google-cloud-integration "Google Cloud: Model Armor for Google and Google Cloud MCP servers"
+[S68]: https://workspaceupdates.googleblog.com/2026/11/mcp-servers-cli-standardized-usage-tiers-now-available.html "Google Workspace Updates: MCP servers, CLI, usage tiers, admin policies"
 
 | ID | Source | Verified on |
 |---|---|---|
@@ -893,3 +910,5 @@ Numbers S1-S34 follow [research/02-standards-guidance.md](research/02-standards-
 | S64 | [RFC 2119][S64] | 2026-10-30 |
 | S65 | [RFC 8174][S65] | 2026-10-30 |
 | S66 | [Semantic Versioning][S66] | 2026-10-30 |
+| S67 | [Google Cloud: Model Armor for MCP servers][S67] | 2026-11-25 |
+| S68 | [Google Workspace Updates: MCP servers][S68] | 2026-11-25 |

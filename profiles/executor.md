@@ -59,6 +59,37 @@ Catalog apps (installed with `apps.install`) belong to the Executor catalog. A c
 2. Wrap the few tools you need in an authored app that follows the spec.
 3. Record waivers with the catalog as the owner and a review date. The checker tags catalog findings `[catalog]`.
 
+## Google Workspace remote MCP servers
+
+Google serves Gmail, Drive, Docs, Sheets, Slides, and Calendar as remote MCP servers at `https://<product>mcp.googleapis.com/mcp/v1`, such as `https://gmailmcp.googleapis.com/mcp/v1`. Add one as an `mcpRouter` app. The server is untrusted third-party content ([SEC-3], [SEC-7]), and its tools are vendor-owned.
+
+**OAuth.** Google has no dynamic client registration and matches the redirect URI exactly, so Executor needs a static client. Create a Web application OAuth client and select "Use this client for an AI-powered agent" (`is_agentic = true`); the servers reject other clients. Keep it separate from clients for non-agent features. Then:
+
+```ts
+oauth2({
+  discover: "https://accounts.google.com",
+  scopes: [/* least privilege, see below */],
+  resource: null, // send no `resource` parameter
+  authorizationParams: { access_type: "offline", prompt: "consent" }, // refresh token
+})
+```
+
+- Request only the scopes the view needs ([SEC-5]). Name each scope in the app source.
+- One client and one account per app, listed under [VIEW-10] when shared.
+
+**Screening ([SEC-7]).** Screen server-side: Model Armor floor settings on the Google Cloud project, integrated service `GOOGLE_MCP_SERVER`, enforcement `INSPECT_AND_BLOCK`. Log detections only, with prompt and response payload logging off ([OBS-2]). Check the setting before you add the app to a view. If you cannot enable it, document a self-owned screening step and record the owner's written risk acceptance.
+
+**Gmail posture.** Drafts only. Grant `gmail.readonly` and `gmail.compose`, never a send scope, so a person sends every message. Keep approval on every Gmail write ([ANN-4]). Gmail, Drive, and Calendar all carry untrusted content, so check each view with them against [SEC-1] and [SEC-2].
+
+**Vendor waivers.** You cannot override the vendor's tool names, descriptions, or hints (see [Descriptions](#descriptions)). Waive each finding with Google as the owner, a review date, and an expiry at most 180 days away ([CONF-2]); the checker tags these `[catalog]` only for catalog apps, so say `vendor` in the reason. Re-review when the vendor's `tools/list` changes ([SEC-3]).
+
+**Errors in unattended callers.** Treat two outcomes as stop conditions, not retries:
+
+- *Model Armor block.* Depending on server and client, a block shows as an error or an empty response; the detail is in Cloud Logging under `model-armor_managed_service`. Log it as a security event with the tool and view, do not rephrase and resend, and do not read the same data from a mirror ([SEC-8]). Alert a person.
+- *MCP elicitation.* An unattended caller cannot answer it. Fail the call, record that a human decision is pending, and never auto-accept.
+
+**No local mirrors ([SEC-8]).** An agent must not read a calendar sync file, an `rclone gdrive:` mount, or a mailbox export in place of these servers. Google requires AI agent access to Workspace data to go through MCP (technical enforcement from 2027-02-01), and a mirror skips the screening. Keep derived data within the vendor's retention limits and redact it per session ([SEC-9]).
+
 ## Views
 
 - New apps start private. Add them to views on purpose ([VIEW-6]).
@@ -124,6 +155,15 @@ MCP_TOKEN=... mcp-gateway-check check https://gateway.example/mcp
 [ANN-4]: ../SPEC.md#ann-4
 [ANN-5]: ../SPEC.md#ann-5
 [ANN-7]: ../SPEC.md#ann-7
+[SEC-1]: ../SPEC.md#sec-1
+[SEC-2]: ../SPEC.md#sec-2
+[SEC-3]: ../SPEC.md#sec-3
+[SEC-5]: ../SPEC.md#sec-5
+[SEC-7]: ../SPEC.md#sec-7
+[SEC-8]: ../SPEC.md#sec-8
+[SEC-9]: ../SPEC.md#sec-9
+[OBS-2]: ../SPEC.md#obs-2
+[CONF-2]: ../SPEC.md#conf-2
 [CHG-1]: ../SPEC.md#chg-1
 [CHG-2]: ../SPEC.md#chg-2
 [VIEW-1]: ../SPEC.md#view-1

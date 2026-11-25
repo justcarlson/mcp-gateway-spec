@@ -4,6 +4,18 @@ All notable changes to this spec and its checker. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Added
+
+- [SEC-7](SPEC.md#sec-7) **MUST**, manual (**Breaking**): a view that serves untrusted third-party content screens it for prompt injection server-side, with the vendor's managed screening (Model Armor `GOOGLE_MCP_SERVER`, `INSPECT_AND_BLOCK`, payload logging off) or a documented self-owned step with recorded risk acceptance.
+- [SEC-8](SPEC.md#sec-8) **MUST NOT**, manual (**Breaking**): an AI agent reads a local mirror of screened upstream data to avoid the managed endpoint.
+- [SEC-9](SPEC.md#sec-9) **SHOULD**, manual: vendor data stays within retention limits (30 days for provider-restricted technical data) and is redacted per session.
+- Sources S67 and S68. Checklist items for SEC-7 and SEC-8.
+- [profiles/executor.md](profiles/executor.md): a Google Workspace remote MCP servers section with the static `is_agentic` OAuth client, drafts-only Gmail, vendor waivers, and Model Armor block and elicitation handling for unattended callers.
+
+### Upstream
+
+- No change.
+
 ## [0.2.0] - 2026-10-31
 
 Four new SHOULD rules from a live miss: a phone client did not use a meta-tool-only gateway to read a shared post until the user named the gateway, and the answer needed a second tool that nothing pointed to. New SHOULD rules make this a minor release. Level 1 does not change. The conformance profiles stay as frozen in 0.1.0, so they do not list the new rules.

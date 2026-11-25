@@ -105,7 +105,7 @@ flowchart LR
 
 ## Rule catalog
 
-120 rules, 42 tested by the checker. Each has a stable ID, a level, a one-line reason, a source, and the MCP revisions it applies to. The [rule index](SPEC.md#17-rule-index) lists them all.
+123 rules, 42 tested by the checker. Each has a stable ID, a level, a one-line reason, a source, and the MCP revisions it applies to. The [rule index](SPEC.md#17-rule-index) lists them all.
 
 | Family | Rules | Checked | Covers |
 |---|---:|---:|---|

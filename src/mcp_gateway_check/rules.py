@@ -181,6 +181,9 @@ _RULES = [
     Rule("SEC-4", "MUST NOT", "The gateway passes client tokens to upstreams"),
     Rule("SEC-5", "MUST", "Upstream credentials are least-privilege; shared ones are recorded"),
     Rule("SEC-6", "SHOULD", "Automation and people use separate views"),
+    Rule("SEC-7", "MUST", "Untrusted content is screened for prompt injection server-side"),
+    Rule("SEC-8", "MUST NOT", "AI agents read local mirrors of screened upstream data"),
+    Rule("SEC-9", "SHOULD", "Vendor data stays within retention limits and is redacted per session"),
     # Conformance
     Rule("CONF-1", "MUST", "Conformance claims name the spec version, level, and evidence"),
     Rule("CONF-2", "MUST", "Waivers name a rule, target, reason, owner, and expiry", True),

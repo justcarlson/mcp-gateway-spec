@@ -51,6 +51,8 @@ Copy into the pull request for any change to tools, groups, descriptions, approv
 - [ ] Lethal-trifecta review for each changed view: private data ☐ untrusted content ☐ outbound ☐ (SEC-1)
 - [ ] Cross-app review of new combinations (SEC-2)
 - [ ] Upstream metadata changes reviewed before they are served (SEC-3)
+- [ ] Untrusted content screened for prompt injection server-side, or the owner's risk acceptance recorded (SEC-7)
+- [ ] No AI agent reads a local mirror of screened upstream data (SEC-8)
 
 ## Edge
 
