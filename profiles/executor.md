@@ -79,7 +79,12 @@ oauth2({
 
 **Screening ([SEC-7]).** Screen server-side: Model Armor floor settings on the Google Cloud project, integrated service `GOOGLE_MCP_SERVER`, enforcement `INSPECT_AND_BLOCK`. Log detections only, with prompt and response payload logging off ([OBS-2]). Check the setting before you add the app to a view. If you cannot enable it, document a self-owned screening step and record the owner's written risk acceptance.
 
-**Gmail posture.** Drafts only. Grant `gmail.readonly` and `gmail.compose`, never a send scope, so a person sends every message. Keep approval on every Gmail write ([ANN-4]). Gmail, Drive, and Calendar all carry untrusted content, so check each view with them against [SEC-1] and [SEC-2].
+**Gmail posture.** Drafts only, but the scope does not enforce it. `gmail.compose` is itself send-capable ("Manage drafts and send emails"), so leaving out `gmail.send` does not make the credential drafts-only. Two separate layers apply:
+
+- *Credential.* `gmail.readonly` plus `gmail.compose` is the narrowest pair that allows drafts ([SEC-5]). Treat the token as able to send.
+- *Tool surface.* Google's MCP server offers draft tools and no send tool today. That is a vendor choice and can change ([SEC-3]); it is not a boundary you own. To enforce drafts-only at the gateway, list the allowed Gmail tools by name after reading `tools/list`, and drop the rest with `renameTools` returning `undefined` ([GRP-4]). Re-review the list when the vendor's tools change.
+
+A person sends every message. Keep approval on every Gmail write ([ANN-4]). Gmail, Drive, and Calendar all carry untrusted content, so check each view with them against [SEC-1] and [SEC-2].
 
 **Vendor waivers.** You cannot override the vendor's tool names, descriptions, or hints (see [Descriptions](#descriptions)). Waive each finding with Google as the owner, a review date, and an expiry at most 180 days away ([CONF-2]); the checker tags these `[catalog]` only for catalog apps, so say `vendor` in the reason. Re-review when the vendor's `tools/list` changes ([SEC-3]).
 
